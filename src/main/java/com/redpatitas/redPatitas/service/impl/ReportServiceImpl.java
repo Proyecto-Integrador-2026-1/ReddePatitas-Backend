@@ -59,9 +59,10 @@ public class ReportServiceImpl implements ReportService {
         String tipoPet = "otro".equalsIgnoreCase(dto.tipo()) && dto.tipoOtro() != null && !dto.tipoOtro().isBlank()
                 ? dto.tipoOtro()
                 : dto.tipo();
+        String nombrePet = dto.nombre() != null && !dto.nombre().isBlank() ? dto.nombre() : "Sin nombre";
 
         var pet = petRepository.save(petMapper.toEntity(new PetCreateDto(
-                dto.nombre(),
+            nombrePet,
                 tipoPet,
                 dto.estado(),
                 dto.descripcion()

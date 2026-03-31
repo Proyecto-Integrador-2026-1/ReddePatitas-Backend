@@ -2,10 +2,12 @@ package com.redpatitas.redPatitas.config;
 
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobContainerClientBuilder;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
+@ConditionalOnProperty(name = "storage.mode", havingValue = "azure")
 public class AzureBlobConfig {
 
     @Bean(name = "blobContainerClient")

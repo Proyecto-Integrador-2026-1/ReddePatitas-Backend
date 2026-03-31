@@ -1,11 +1,7 @@
 package com.redpatitas.redPatitas.service.impl;
 
-import com.azure.storage.blob.BlobContainerClient;
-import com.azure.storage.blob.models.BlobHttpHeaders;
 import com.redpatitas.redPatitas.service.interfaces.FileStorageService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -15,25 +11,26 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class FileStorageServiceImpl implements FileStorageService {
-
-    @Qualifier("blobContainerClient")
-    private final BlobContainerClient blobContainerClient;
-
-    @Qualifier("thumbnailContainerClient")
-    private final BlobContainerClient thumbnailContainerClient;
 
     // Tamaño de miniatura
     private static final int THUMBNAIL_WIDTH = 200;
     private static final int THUMBNAIL_HEIGHT = 200;
+    private static final Path UPLOAD_ROOT = Paths.get("local-uploads");
+    private static final Path ORIGINALS_DIR = UPLOAD_ROOT.resolve("originals");
+    private static final Path THUMBNAILS_DIR = UPLOAD_ROOT.resolve("thumbnails");
 
     @Override
     public FileStorageService.UploadResult uploadImageAndThumbnail(MultipartFile file) throws IOException {
+        ensureDirectories();
+
         // Validar que sea una imagen
         String contentType = file.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
@@ -41,24 +38,21 @@ public class FileStorageServiceImpl implements FileStorageService {
         }
 
         // Generar nombre único
-        String originalBlobName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        String thumbnailBlobName = UUID.randomUUID() + "_thumb_" + file.getOriginalFilename();
+        String safeOriginalName = UUID.randomUUID() + "_" + sanitizeFilename(file.getOriginalFilename());
+        Path originalPath = ORIGINALS_DIR.resolve(safeOriginalName);
 
-        // Subir imagen original
-        var originalBlobClient = blobContainerClient.getBlobClient(originalBlobName);
-        BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(contentType);
-        originalBlobClient.upload(file.getInputStream(), file.getSize(), true);
-        originalBlobClient.setHttpHeaders(headers);
-        String originalUrl = originalBlobClient.getBlobUrl();
+        // Guardar imagen original
+        Files.write(originalPath, file.getBytes());
+        String originalUrl = originalPath.toUri().toString();
 
         // Generar miniatura en memoria
         byte[] thumbnailBytes = generateThumbnail(file.getBytes());
 
-        // Subir miniatura
-        var thumbnailBlobClient = thumbnailContainerClient.getBlobClient(thumbnailBlobName);
-        thumbnailBlobClient.upload(new ByteArrayInputStream(thumbnailBytes), thumbnailBytes.length, true);
-        thumbnailBlobClient.setHttpHeaders(new BlobHttpHeaders().setContentType("image/jpeg"));
-        String thumbnailUrl = thumbnailBlobClient.getBlobUrl();
+        // Guardar miniatura
+        String thumbnailName = UUID.randomUUID() + "_thumb.jpg";
+        Path thumbnailPath = THUMBNAILS_DIR.resolve(thumbnailName);
+        Files.write(thumbnailPath, thumbnailBytes);
+        String thumbnailUrl = thumbnailPath.toUri().toString();
 
         return new FileStorageService.UploadResult(originalUrl, thumbnailUrl);
     }
@@ -99,21 +93,32 @@ public class FileStorageServiceImpl implements FileStorageService {
 
     @Override
     public String uploadImage(MultipartFile file) throws IOException {
-        // Si no quieres subir miniatura, solo imagen original
-        String blobName = UUID.randomUUID() + "_" + file.getOriginalFilename();
-        var blobClient = blobContainerClient.getBlobClient(blobName);
-        BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(file.getContentType());
-        blobClient.upload(file.getInputStream(), file.getSize(), true);
-        blobClient.setHttpHeaders(headers);
-        return blobClient.getBlobUrl();
+        ensureDirectories();
+        String safeOriginalName = UUID.randomUUID() + "_" + sanitizeFilename(file.getOriginalFilename());
+        Path originalPath = ORIGINALS_DIR.resolve(safeOriginalName);
+        Files.write(originalPath, file.getBytes());
+        return originalPath.toUri().toString();
     }
 
     @Override
     public String uploadThumbnail(byte[] thumbnailBytes, String contentType) throws IOException {
-        String blobName = UUID.randomUUID() + "_thumb.jpg";
-        var blobClient = thumbnailContainerClient.getBlobClient(blobName);
-        blobClient.upload(new ByteArrayInputStream(thumbnailBytes), thumbnailBytes.length, true);
-        blobClient.setHttpHeaders(new BlobHttpHeaders().setContentType(contentType));
-        return blobClient.getBlobUrl();
+        ensureDirectories();
+        String fileExtension = contentType != null && contentType.contains("png") ? "png" : "jpg";
+        String thumbnailName = UUID.randomUUID() + "_thumb." + fileExtension;
+        Path thumbnailPath = THUMBNAILS_DIR.resolve(thumbnailName);
+        Files.write(thumbnailPath, thumbnailBytes);
+        return thumbnailPath.toUri().toString();
+    }
+
+    private void ensureDirectories() throws IOException {
+        Files.createDirectories(ORIGINALS_DIR);
+        Files.createDirectories(THUMBNAILS_DIR);
+    }
+
+    private String sanitizeFilename(String fileName) {
+        if (fileName == null || fileName.isBlank()) {
+            return "image";
+        }
+        return fileName.replaceAll("[^a-zA-Z0-9._-]", "_");
     }
 }

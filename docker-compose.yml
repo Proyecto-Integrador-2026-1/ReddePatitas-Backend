@@ -1,0 +1,37 @@
+version: "3.8"
+
+services:
+  postgres_project1:
+    image: postgis/postgis:15-3.3
+    container_name: redpatitas_postgres_project1
+    environment:
+      POSTGRES_DB: redpatitas_db
+      POSTGRES_USER: redpatitas
+      POSTGRES_PASSWORD: redpatitas_pass
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_project1_data:/var/lib/postgresql/data
+      - ./db/project1/init.sql:/docker-entrypoint-initdb.d/create_schema.sql:ro
+    networks:
+      - redpatitas_net
+
+  nginx_static:
+    image: nginx:stable-alpine
+    container_name: redpatitas_static
+    ports:
+      - "8081:80"
+    volumes:
+      - ./local-uploads:/usr/share/nginx/html/uploads:ro
+    depends_on:
+      - postgres_project1
+    networks:
+      - redpatitas_net
+
+
+volumes:
+  db_project1_data:
+
+networks:
+  redpatitas_net:
+    driver: bridge
