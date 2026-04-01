@@ -1,29 +1,24 @@
--- Inicialización de esquema para ReddePatitas (PostgreSQL)
--- Crea las tablas `users`, `pets` y `reports` usadas por el proyecto
--- Inicialización de esquema para ReddePatitas (PostgreSQL + PostGIS)
--- Activa PostGIS
 CREATE EXTENSION IF NOT EXISTS postgis;
 
--- Usuarios
 CREATE TABLE IF NOT EXISTS users (
   id BIGSERIAL PRIMARY KEY,
   nombre VARCHAR(255) NOT NULL,
   apellido VARCHAR(255) NOT NULL,
   telefono VARCHAR(50) NOT NULL UNIQUE,
-  contrasena VARCHAR(512) NOT NULL,
-  fecha_registro TIMESTAMPTZ NOT NULL
+  contraseña VARCHAR(512) NOT NULL,
+  fecha_registro TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
--- Mascotas
 CREATE TABLE IF NOT EXISTS pets (
   id BIGSERIAL PRIMARY KEY,
+  user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
+  id_reporte BIGINT REFERENCES reports(id) ON DELETE SET NULL,
   nombre VARCHAR(255) NOT NULL,
   tipo VARCHAR(255) NOT NULL,
   estado VARCHAR(255) NOT NULL,
   descripcion VARCHAR(1000) NOT NULL
 );
 
--- Reportes
 CREATE TABLE IF NOT EXISTS reports (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
@@ -31,24 +26,17 @@ CREATE TABLE IF NOT EXISTS reports (
   tipo_reporte VARCHAR(255) NOT NULL,
   estado_reporte VARCHAR(255) NOT NULL,
   fecha_evento TIMESTAMPTZ NOT NULL,
-  fecha_creacion TIMESTAMPTZ NOT NULL,
-  lugar_desaparicion VARCHAR(300),
-  latitud NUMERIC(12,9),
-  longitud NUMERIC(12,9),
-  imagen_url VARCHAR(700),
-  thumbnail_url VARCHAR(700)
+  fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now(),
 );
 
--- Tabla para imágenes (imagen)
 CREATE TABLE IF NOT EXISTS imagen (
   id_imagen BIGSERIAL PRIMARY KEY,
   id_reporte BIGINT REFERENCES reports(id) ON DELETE CASCADE,
-  url_original VARCHAR(700) NOT NULL,
-  url_thumbnail VARCHAR(700),
+  imagen_url VARCHAR(700),
+  thumbnail_url VARCHAR(700),
   creado_en TIMESTAMPTZ DEFAULT now()
 );
 
--- Tabla para ubicaciones separada (ubicacion) con columna geom de PostGIS
 CREATE TABLE IF NOT EXISTS ubicacion (
   id_ubicacion BIGSERIAL PRIMARY KEY,
   id_reporte BIGINT REFERENCES reports(id) ON DELETE CASCADE,
@@ -76,7 +64,7 @@ CREATE TRIGGER trg_set_geom
 BEFORE INSERT OR UPDATE ON ubicacion
 FOR EACH ROW EXECUTE FUNCTION ubicacion_set_geom();
 
--- Índices recomendados
+-- Índices
 CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id);
 CREATE INDEX IF NOT EXISTS idx_reports_pet_id ON reports(pet_id);
 CREATE INDEX IF NOT EXISTS idx_imagen_reporte ON imagen(id_reporte);

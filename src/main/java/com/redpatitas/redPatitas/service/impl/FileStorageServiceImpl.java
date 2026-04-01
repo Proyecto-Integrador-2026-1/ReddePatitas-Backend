@@ -2,6 +2,7 @@ package com.redpatitas.redPatitas.service.impl;
 
 import com.redpatitas.redPatitas.service.interfaces.FileStorageService;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -27,6 +28,12 @@ public class FileStorageServiceImpl implements FileStorageService {
     private static final Path ORIGINALS_DIR = UPLOAD_ROOT.resolve("originals");
     private static final Path THUMBNAILS_DIR = UPLOAD_ROOT.resolve("thumbnails");
 
+    private final String publicBaseUrl;
+
+    public FileStorageServiceImpl(@Value("${storage.public-url:http://localhost:8081/uploads}") String publicBaseUrl) {
+        this.publicBaseUrl = publicBaseUrl.endsWith("/") ? publicBaseUrl.substring(0, publicBaseUrl.length()-1) : publicBaseUrl;
+    }
+
     @Override
     public FileStorageService.UploadResult uploadImageAndThumbnail(MultipartFile file) throws IOException {
         ensureDirectories();
@@ -43,7 +50,7 @@ public class FileStorageServiceImpl implements FileStorageService {
 
         // Guardar imagen original
         Files.write(originalPath, file.getBytes());
-        String originalUrl = originalPath.toUri().toString();
+        String originalUrl = publicBaseUrl + "/originals/" + safeOriginalName;
 
         // Generar miniatura en memoria
         byte[] thumbnailBytes = generateThumbnail(file.getBytes());
@@ -52,7 +59,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         String thumbnailName = UUID.randomUUID() + "_thumb.jpg";
         Path thumbnailPath = THUMBNAILS_DIR.resolve(thumbnailName);
         Files.write(thumbnailPath, thumbnailBytes);
-        String thumbnailUrl = thumbnailPath.toUri().toString();
+        String thumbnailUrl = publicBaseUrl + "/thumbnails/" + thumbnailName;
 
         return new FileStorageService.UploadResult(originalUrl, thumbnailUrl);
     }
@@ -97,7 +104,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         String safeOriginalName = UUID.randomUUID() + "_" + sanitizeFilename(file.getOriginalFilename());
         Path originalPath = ORIGINALS_DIR.resolve(safeOriginalName);
         Files.write(originalPath, file.getBytes());
-        return originalPath.toUri().toString();
+        return publicBaseUrl + "/originals/" + safeOriginalName;
     }
 
     @Override
@@ -107,7 +114,7 @@ public class FileStorageServiceImpl implements FileStorageService {
         String thumbnailName = UUID.randomUUID() + "_thumb." + fileExtension;
         Path thumbnailPath = THUMBNAILS_DIR.resolve(thumbnailName);
         Files.write(thumbnailPath, thumbnailBytes);
-        return thumbnailPath.toUri().toString();
+        return publicBaseUrl + "/thumbnails/" + thumbnailName;
     }
 
     private void ensureDirectories() throws IOException {

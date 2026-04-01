@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -18,7 +19,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -42,7 +42,8 @@ public class ReportController {
             @ApiResponse(responseCode = "200", description = "Reporte y mascota creados exitosamente"),
             @ApiResponse(responseCode = "400", description = "Payload inválido del formulario")
     })
-    public CompletableFuture<ResponseEntity<ReportResponseDto>> createFromFrontendForm(
+        public CompletableFuture<ResponseEntity<ReportResponseDto>> createFromFrontendForm(
+            @NotNull @RequestParam("user_id") Long userId,
             @NotBlank @RequestParam("estado") String estado,
             @NotBlank @RequestParam("tipo") String tipo,
             @RequestParam(value = "tipo_otro", required = false) String tipoOtro,
@@ -55,7 +56,7 @@ public class ReportController {
             @RequestPart(value = "image", required = false) MultipartFile image
     ) {
         ReportFrontendRequestDto dto = new ReportFrontendRequestDto(
-                null,
+                userId,
                 estado,
                 tipo,
                 tipoOtro,

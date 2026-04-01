@@ -9,45 +9,36 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.Instant;
+
 @Entity
-@Table(name = "reports")
+@Table(name = "imagen")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Report {
+public class Imagen {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long idImagen;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "id_reporte")
+    private Report report;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pet_id")
-    private Pet pet;
+    @Column(name = "imagen_url", length = 700)
+    private String imagenUrl;
 
-    @Column(nullable = false)
-    private String tipoReporte;
+    @Column(name = "thumbnail_url", length = 700)
+    private String thumbnailUrl;
 
-    @Column(nullable = false)
-    private String estadoReporte;
-
-    @Column(nullable = false)
-    private Instant fechaEvento;
-
-    @Column(nullable = false)
-    private Instant fechaCreacion;
-
-    @Column(length = 300)
-    private String lugarDesaparicion;
+    @Column(name = "creado_en")
+    private Instant creadoEn;
 }

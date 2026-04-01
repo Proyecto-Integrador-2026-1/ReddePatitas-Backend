@@ -9,45 +9,37 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.Instant;
+
 @Entity
-@Table(name = "reports")
+@Table(name = "ubicacion")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Report {
+public class Ubicacion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long idUbicacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "id_reporte")
+    private Report report;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pet_id")
-    private Pet pet;
-
-    @Column(nullable = false)
-    private String tipoReporte;
-
-    @Column(nullable = false)
-    private String estadoReporte;
-
-    @Column(nullable = false)
-    private Instant fechaEvento;
-
-    @Column(nullable = false)
-    private Instant fechaCreacion;
-
-    @Column(length = 300)
+    @Column(name = "lugar_desaparicion", length = 300)
     private String lugarDesaparicion;
+
+    @Column(precision = 12, scale = 9)
+    private BigDecimal latitud;
+
+    @Column(precision = 12, scale = 9)
+    private BigDecimal longitud;
+
 }

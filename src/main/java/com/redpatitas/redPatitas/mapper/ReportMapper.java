@@ -22,8 +22,6 @@ public class ReportMapper {
                 .fechaEvento(dto.fechaEvento())
                 .fechaCreacion(dto.fechaCreacion() != null ? dto.fechaCreacion() : Instant.now())
                 .lugarDesaparicion(dto.lugarDesaparicion())
-                .latitud(dto.latitud())
-                .longitud(dto.longitud())
                 .build();
     }
 
@@ -49,10 +47,35 @@ public class ReportMapper {
                 report.getFechaEvento(),
                 report.getFechaCreacion(),
                 report.getLugarDesaparicion(),
-                report.getLatitud(),
-                report.getLongitud(),
-                report.getImagenUrl(),
-                report.getThumbnailUrl(),
+                null,
+                null,
+                null,
+                null,
+                report.getUser() != null ? report.getUser().getId() : null,
+                report.getPet() != null ? report.getPet().getId() : null
+        );
+    }
+
+    public ReportResponseDto toDto(Report report, com.redpatitas.redPatitas.entity.Imagen imagen, com.redpatitas.redPatitas.entity.Ubicacion ubicacion) {
+        java.math.BigDecimal lat = null;
+        java.math.BigDecimal lon = null;
+        if (ubicacion != null) {
+            lat = ubicacion.getLatitud();
+            lon = ubicacion.getLongitud();
+        }
+        String imagenUrl = imagen != null ? imagen.getImagenUrl() : null;
+        String thumbnail = imagen != null ? imagen.getThumbnailUrl() : null;
+        return new ReportResponseDto(
+                report.getId(),
+                report.getTipoReporte(),
+                report.getEstadoReporte(),
+                report.getFechaEvento(),
+                report.getFechaCreacion(),
+                report.getLugarDesaparicion(),
+                lat,
+                lon,
+                imagenUrl,
+                thumbnail,
                 report.getUser() != null ? report.getUser().getId() : null,
                 report.getPet() != null ? report.getPet().getId() : null
         );
