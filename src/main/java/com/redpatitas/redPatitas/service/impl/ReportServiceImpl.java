@@ -3,6 +3,7 @@ package com.redpatitas.redPatitas.service.impl;
 import com.redpatitas.redPatitas.dto.request.PetCreateDto;
 import com.redpatitas.redPatitas.dto.request.ReportCreateDto;
 import com.redpatitas.redPatitas.dto.request.ReportFormRequestDto;
+import com.redpatitas.redPatitas.dto.response.ReportPrincipalResponseDto;
 import com.redpatitas.redPatitas.dto.response.ReportResponseDto;
 import com.redpatitas.redPatitas.mapper.PetMapper;
 import com.redpatitas.redPatitas.mapper.ReportMapper;
@@ -15,6 +16,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
@@ -107,6 +109,42 @@ public class ReportServiceImpl implements ReportService {
             var ub = ubicacionRepository.findLatestByReportId(r.getId()).orElse(null);
             return reportMapper.toDto(r, img, ub);
         }).toList();
+        return CompletableFuture.completedFuture(reports);
+    }
+
+    @Override
+    @Async
+    public CompletableFuture<List<ReportPrincipalResponseDto>> findAllForPrincipal() {
+        var reports = reportRepository.findAllWithPet().stream()
+                .map(report -> {
+                    var pet = report.getPet();
+                    var img = imagenRepository.findLatestByReportId(report.getId()).orElse(null);
+                    var ub = ubicacionRepository.findLatestByReportId(report.getId()).orElse(null);
+
+                    String estado = pet != null && pet.getEstado() != null && !pet.getEstado().isBlank()
+                            ? pet.getEstado()
+                            : report.getTipoReporte();
+
+                    return new ReportPrincipalResponseDto(
+                            report.getId(),
+                            pet != null && pet.getNombre() != null && !pet.getNombre().isBlank() ? pet.getNombre() : "Sin nombre",
+                            estado != null && !estado.isBlank() ? estado : "perdido",
+                            pet != null && pet.getTipo() != null && !pet.getTipo().isBlank() ? pet.getTipo() : "desconocido",
+                            pet != null ? pet.getDescripcion() : null,
+                            ub != null ? ub.getLugarDesaparicion() : null,
+                            ub != null ? ub.getLatitud() : null,
+                            ub != null ? ub.getLongitud() : null,
+                            img != null ? img.getImagenUrl() : null,
+                            img != null ? img.getThumbnailUrl() : null,
+                            report.getFechaCreacion(),
+                            report.getFechaEvento()
+                    );
+                })
+                .filter(item -> item.latitud() != null && item.longitud() != null)
+                .sorted(Comparator.comparing(ReportPrincipalResponseDto::fecha_publicacion,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .toList();
+
         return CompletableFuture.completedFuture(reports);
     }
 }
