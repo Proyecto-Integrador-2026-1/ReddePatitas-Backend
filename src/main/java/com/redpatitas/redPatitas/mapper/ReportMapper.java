@@ -1,14 +1,15 @@
 package com.redpatitas.redPatitas.mapper;
 
-import com.redpatitas.redPatitas.dto.ReportCreateDto;
-import com.redpatitas.redPatitas.dto.ReportResponseDto;
-import com.redpatitas.redPatitas.dto.request.ReportFrontendRequestDto;
+import com.redpatitas.redPatitas.dto.request.ReportCreateDto;
+import com.redpatitas.redPatitas.dto.request.ReportFormRequestDto;
+import com.redpatitas.redPatitas.dto.response.ReportResponseDto;
 import com.redpatitas.redPatitas.entity.Pet;
 import com.redpatitas.redPatitas.entity.Report;
 import com.redpatitas.redPatitas.entity.User;
 import org.springframework.stereotype.Component;
 
 import java.time.Instant;
+import java.time.ZoneOffset;
 
 @Component
 public class ReportMapper {
@@ -18,22 +19,21 @@ public class ReportMapper {
                 .user(user)
                 .pet(pet)
                 .tipoReporte(dto.tipoReporte())
-                .estadoReporte(dto.estadoReporte())
                 .fechaEvento(dto.fechaEvento())
                 .fechaCreacion(dto.fechaCreacion() != null ? dto.fechaCreacion() : Instant.now())
-                .lugarDesaparicion(dto.lugarDesaparicion())
-                .latitud(dto.latitud())
-                .longitud(dto.longitud())
                 .build();
     }
 
-    public ReportCreateDto fromFrontendDto(ReportFrontendRequestDto dto, Long petId) {
+    public ReportCreateDto fromFrontendDto(ReportFormRequestDto dto, Long petId) {
+        Instant fechaEvento = dto.fechaDesaparicion() != null
+            ? dto.fechaDesaparicion().atStartOfDay().toInstant(ZoneOffset.UTC)
+            : Instant.now();
+        String tipoReporte = dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "perdida";
         return new ReportCreateDto(
                 dto.userId(),
                 petId,
-                "perdida",
-                dto.estado(),
-                dto.fechaDesaparicion(),
+                tipoReporte,
+            fechaEvento,
                 dto.creadoEn() != null ? dto.creadoEn() : Instant.now(),
                 dto.lugarDesaparicion(),
                 dto.latitud(),
@@ -45,14 +45,37 @@ public class ReportMapper {
         return new ReportResponseDto(
                 report.getId(),
                 report.getTipoReporte(),
-                report.getEstadoReporte(),
                 report.getFechaEvento(),
                 report.getFechaCreacion(),
-                report.getLugarDesaparicion(),
-                report.getLatitud(),
-                report.getLongitud(),
-                report.getImagenUrl(),
-                report.getThumbnailUrl(),
+                null,
+                null,
+                null,
+                null,
+                null,
+                report.getUser() != null ? report.getUser().getId() : null,
+                report.getPet() != null ? report.getPet().getId() : null
+        );
+    }
+
+    public ReportResponseDto toDto(Report report, com.redpatitas.redPatitas.entity.Imagen imagen, com.redpatitas.redPatitas.entity.Ubicacion ubicacion) {
+        java.math.BigDecimal lat = null;
+        java.math.BigDecimal lon = null;
+        if (ubicacion != null) {
+            lat = ubicacion.getLatitud();
+            lon = ubicacion.getLongitud();
+        }
+        String imagenUrl = imagen != null ? imagen.getImagenUrl() : null;
+        String thumbnail = imagen != null ? imagen.getThumbnailUrl() : null;
+        return new ReportResponseDto(
+                report.getId(),
+                report.getTipoReporte(),
+                report.getFechaEvento(),
+                report.getFechaCreacion(),
+                ubicacion != null ? ubicacion.getLugarDesaparicion() : null,
+                lat,
+                lon,
+                imagenUrl,
+                thumbnail,
                 report.getUser() != null ? report.getUser().getId() : null,
                 report.getPet() != null ? report.getPet().getId() : null
         );

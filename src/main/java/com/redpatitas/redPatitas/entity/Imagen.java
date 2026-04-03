@@ -2,13 +2,14 @@ package com.redpatitas.redPatitas.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,32 +17,29 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pets")
+@Table(name = "imagen")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Pet {
+public class Imagen {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "id_imagen")
+    private Long idImagen;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "id_reporte")
+    private Report report;
 
-    @Column(name = "nombre", nullable = false)
-    private String nombre;
+    @Column(name = "imagen_url", length = 700)
+    private String imagenUrl;
 
-    @Column(name = "tipo", nullable = false)
-    private String tipo;
+    @Column(name = "thumbnail_url", length = 700)
+    private String thumbnailUrl;
 
-    @Column(name = "estado", nullable = false)
-    private String estado;
-
-    @Column(name = "descripcion", nullable = false, length = 1000)
-    private String descripcion;
+    @Column(name = "creado_en")
+    private Instant creadoEn;
 }

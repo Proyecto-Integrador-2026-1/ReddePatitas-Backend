@@ -1,7 +1,7 @@
 package com.redpatitas.redPatitas.service.interfaces;
 
-import com.redpatitas.redPatitas.dto.UserCreateDto;
-import com.redpatitas.redPatitas.dto.UserResponseDto;
+import com.redpatitas.redPatitas.dto.request.UserCreateDto;
+import com.redpatitas.redPatitas.dto.response.UserResponseDto;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;

@@ -2,13 +2,14 @@ package com.redpatitas.redPatitas.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -16,32 +17,30 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "pets")
+@Table(name = "ubicacion")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Pet {
+public class Ubicacion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @Column(name = "id_ubicacion")
+    private Long idUbicacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @JoinColumn(name = "id_reporte")
+    private Report report;
 
-    @Column(name = "nombre", nullable = false)
-    private String nombre;
+    @Column(name = "lugar_desaparicion", length = 300)
+    private String lugarDesaparicion;
 
-    @Column(name = "tipo", nullable = false)
-    private String tipo;
+    @Column(name = "latitud", precision = 12, scale = 9)
+    private BigDecimal latitud;
 
-    @Column(name = "estado", nullable = false)
-    private String estado;
+    @Column(name = "longitud", precision = 12, scale = 9)
+    private BigDecimal longitud;
 
-    @Column(name = "descripcion", nullable = false, length = 1000)
-    private String descripcion;
 }

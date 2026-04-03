@@ -1,4 +1,4 @@
-package com.redpatitas.redPatitas.dto;
+package com.redpatitas.redPatitas.dto.response;
 
 import java.time.Instant;
 

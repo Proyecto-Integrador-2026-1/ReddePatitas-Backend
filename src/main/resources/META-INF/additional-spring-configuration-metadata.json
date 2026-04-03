@@ -16,6 +16,26 @@
       "description": "Container name for thumbnails."
     },
     {
+      "name": "storage.mode",
+      "type": "java.lang.String",
+      "description": "Storage backend mode: local or azure."
+    },
+    {
+      "name": "storage.public-url",
+      "type": "java.lang.String",
+      "description": "Public base URL used for locally served uploads."
+    },
+    {
+      "name": "spring.flyway.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables Flyway database migrations."
+    },
+    {
+      "name": "spring.flyway.locations",
+      "type": "java.lang.String",
+      "description": "Classpath locations where Flyway migration scripts are found."
+    },
+    {
       "name": "app.jwt.secret",
       "type": "java.lang.String",
       "description": "JWT signing secret key."
