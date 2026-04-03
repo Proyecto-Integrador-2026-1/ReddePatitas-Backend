@@ -1,4 +1,4 @@
-package com.redpatitas.redPatitas.dto;
+package com.redpatitas.redPatitas.dto.response;
 
 public record PetResponseDto(
         Long id,

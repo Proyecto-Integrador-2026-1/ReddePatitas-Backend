@@ -4,9 +4,11 @@
 
 **Endpoint:** `POST /api/reports/form`
 
-**Descripción:** Este es el endpoint principal que tu frontend usará. Recibe:
+**Descripción:** Este es el endpoint principal que tu frontend usará. Recibe multipart/form-data con:
 - `payload`: JSON con los datos del reporte y mascota
 - `image`: Archivo de imagen (opcional pero recomendado)
+
+> Importante: `payload` debe enviarse como `application/json` dentro del multipart.
 
 #### JSON del Payload (copiar y pegar en Swagger):
 
@@ -20,8 +22,8 @@
   "descripcion": "Gato blanco de pelaje frondoso",
   "fecha_desaparicion": "2026-03-29T05:00:00Z",
   "lugar_desaparicion": "Vereda la Cascada, Caramanta",
-  "latitud": "5.528010967426297",
-  "longitud": "-75.65569253490617",
+  "latitud": 5.528010967426297,
+  "longitud": -75.65569253490617,
   "creadoEn": "2026-03-29T16:04:40.218Z"
 }
 ```
@@ -111,8 +113,27 @@ curl -X POST http://localhost:8080/api/reports/form \
     "latitud": 5.528010967426297,
     "longitud": -75.65569253490617,
     "creadoEn": "2026-03-29T16:04:40.218Z"
-  }' \
+  };type=application/json' \
   -F 'image=@/ruta/a/tu/imagen.jpg'
+```
+
+### Crear Reporte sin Imagen:
+
+```bash
+curl -X POST http://localhost:8080/api/reports/form \
+  -F 'payload={
+    "userId": 1,
+    "estado": "perdido",
+    "tipo": "gato",
+    "tipo_otro": "",
+    "nombre": "Venus",
+    "descripcion": "Gato blanco de pelaje frondoso",
+    "fecha_desaparicion": "2026-03-29T05:00:00Z",
+    "lugar_desaparicion": "Vereda la Cascada, Caramanta",
+    "latitud": 5.528010967426297,
+    "longitud": -75.65569253490617,
+    "creadoEn": "2026-03-29T16:04:40.218Z"
+  };type=application/json'
 ```
 
 ### Crear Usuario:
@@ -161,16 +182,18 @@ curl http://localhost:8080/api/reports
 
 1. **Si no tienes un usuario:** El endpoint `/api/reports/form` puede crear reportes sin userId (se guardará como null)
 2. **La imagen es opcional:** Si no envías imagen, no se procesará con FileStorageService
-3. **El endpoint maneja asincronia:** La respuesta puede tardar un poco por la subida a Azure Blob Storage
+3. **El endpoint maneja asincronía:** La respuesta puede tardar un poco por el procesamiento y guardado de imagen
 4. **La mascota se crea automáticamente:** No necesitas crearla por separado si usas `/form`
-5. **Latitud y Longitud:** Son decimales (no strings) en la respuesta
+5. **Latitud y Longitud:** En payload y respuesta se manejan como decimales
 
 ---
 
 ## Pasos para Iniciar y Probar:
 
 ```bash
-# 1. Asegúrate de que PostgreSQL está corriendo (Supabase en application.properties)
+# 1. Levanta la base local con Docker Compose
+docker compose up -d
+
 # 2. Inicia la app:
 mvn spring-boot:run
 
@@ -186,7 +209,9 @@ http://localhost:8080/swagger-ui.html
 ## Troubleshooting
 
 - **Error 400 en Swagger:** Verifica que el JSON sea válido (sin comillas adicionales)
-- **Error al subir imagen:** Asegúrate que tu Azure Blob Storage esté configurado en application.properties
+- **Error en `payload` multipart:** Verifica que la parte `payload` se envíe como `application/json`
+- **Error al subir imagen en modo local:** Verifica que exista la carpeta `local-uploads` y que el contenedor `nginx_static` esté activo
+- **Error al subir imagen en modo azure:** Revisa `storage.mode=azure` y las propiedades `azure.storage.*` en application.properties
 - **Timeout:** Es normal que tarde 2-3 segundos por la subida de imagen asíncrona
 - **ConnectionString inválida:** Revisa `azure.storage.connection-string` en application.properties
 

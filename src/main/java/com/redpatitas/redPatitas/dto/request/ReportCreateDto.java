@@ -1,4 +1,4 @@
-package com.redpatitas.redPatitas.dto;
+package com.redpatitas.redPatitas.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -10,7 +10,6 @@ public record ReportCreateDto(
         Long userId,
         Long petId,
         @NotBlank String tipoReporte,
-        @NotBlank String estadoReporte,
         @NotNull Instant fechaEvento,
         Instant fechaCreacion,
         String lugarDesaparicion,

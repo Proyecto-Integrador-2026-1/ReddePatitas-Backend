@@ -1,22 +1,20 @@
 package com.redpatitas.redPatitas.service.impl;
 
-import com.redpatitas.redPatitas.dto.PetCreateDto;
-import com.redpatitas.redPatitas.dto.ReportCreateDto;
-import com.redpatitas.redPatitas.dto.ReportResponseDto;
-import com.redpatitas.redPatitas.dto.request.ReportFrontendRequestDto;
+import com.redpatitas.redPatitas.dto.request.PetCreateDto;
+import com.redpatitas.redPatitas.dto.request.ReportCreateDto;
+import com.redpatitas.redPatitas.dto.request.ReportFormRequestDto;
+import com.redpatitas.redPatitas.dto.response.ReportResponseDto;
 import com.redpatitas.redPatitas.mapper.PetMapper;
 import com.redpatitas.redPatitas.mapper.ReportMapper;
 import com.redpatitas.redPatitas.repository.PetRepository;
 import com.redpatitas.redPatitas.repository.ReportRepository;
 import com.redpatitas.redPatitas.repository.UserRepository;
-import com.redpatitas.redPatitas.service.interfaces.FileStorageService;
 import com.redpatitas.redPatitas.service.interfaces.ReportService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
@@ -81,18 +79,21 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     @Async
-    public CompletableFuture<ReportResponseDto> createFromFrontendForm(ReportFrontendRequestDto dto, MultipartFile image) {
+    public CompletableFuture<ReportResponseDto> createFromFrontendForm(ReportFormRequestDto dto, MultipartFile image) {
         String tipoPet = "otro".equalsIgnoreCase(dto.tipo()) && dto.tipoOtro() != null && !dto.tipoOtro().isBlank()
                 ? dto.tipoOtro()
                 : dto.tipo();
+        String tipoReporte = dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "perdida";
         String nombrePet = dto.nombre() != null && !dto.nombre().isBlank() ? dto.nombre() : "Sin nombre";
+        var user = dto.userId() != null ? userRepository.findById(dto.userId()).orElse(null) : null;
 
         var pet = petRepository.save(petMapper.toEntity(new PetCreateDto(
             nombrePet,
                 tipoPet,
-                dto.estado(),
-                dto.descripcion()
-        )));
+            tipoReporte,
+            dto.descripcion(),
+            dto.userId()
+        ), user));
 
         var createDto = reportMapper.fromFrontendDto(dto, pet.getId());
         return create(createDto, image);

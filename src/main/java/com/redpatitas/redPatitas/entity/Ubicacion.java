@@ -27,6 +27,7 @@ public class Ubicacion {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_ubicacion")
     private Long idUbicacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -36,10 +37,10 @@ public class Ubicacion {
     @Column(name = "lugar_desaparicion", length = 300)
     private String lugarDesaparicion;
 
-    @Column(precision = 12, scale = 9)
+    @Column(name = "latitud", precision = 12, scale = 9)
     private BigDecimal latitud;
 
-    @Column(precision = 12, scale = 9)
+    @Column(name = "longitud", precision = 12, scale = 9)
     private BigDecimal longitud;
 
 }

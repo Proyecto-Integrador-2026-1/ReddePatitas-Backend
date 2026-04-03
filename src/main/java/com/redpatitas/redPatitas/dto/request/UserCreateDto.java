@@ -1,4 +1,4 @@
-package com.redpatitas.redPatitas.dto;
+package com.redpatitas.redPatitas.dto.request;
 
 import jakarta.validation.constraints.NotBlank;
 

@@ -1,4 +1,4 @@
-package com.redpatitas.redPatitas.dto;
+package com.redpatitas.redPatitas.dto.response;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -6,7 +6,6 @@ import java.time.Instant;
 public record ReportResponseDto(
         Long id,
         String tipoReporte,
-        String estadoReporte,
         Instant fechaEvento,
         Instant fechaCreacion,
         String lugarDesaparicion,

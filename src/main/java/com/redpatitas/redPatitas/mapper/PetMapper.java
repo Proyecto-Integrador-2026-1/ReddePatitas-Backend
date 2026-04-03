@@ -1,15 +1,21 @@
 package com.redpatitas.redPatitas.mapper;
 
-import com.redpatitas.redPatitas.dto.PetCreateDto;
-import com.redpatitas.redPatitas.dto.PetResponseDto;
+import com.redpatitas.redPatitas.dto.request.PetCreateDto;
+import com.redpatitas.redPatitas.dto.response.PetResponseDto;
 import com.redpatitas.redPatitas.entity.Pet;
+import com.redpatitas.redPatitas.entity.User;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PetMapper {
 
     public Pet toEntity(PetCreateDto dto) {
+        return toEntity(dto, null);
+    }
+
+    public Pet toEntity(PetCreateDto dto, User user) {
         return Pet.builder()
+                .user(user)
                 .nombre(dto.nombre())
                 .tipo(dto.tipo())
                 .estado(dto.estado())

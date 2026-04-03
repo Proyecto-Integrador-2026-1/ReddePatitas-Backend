@@ -5,14 +5,13 @@ CREATE TABLE IF NOT EXISTS users (
   nombre VARCHAR(255) NOT NULL,
   apellido VARCHAR(255) NOT NULL,
   telefono VARCHAR(50) NOT NULL UNIQUE,
-  contraseña VARCHAR(512) NOT NULL,
+  contrasena VARCHAR(512) NOT NULL,
   fecha_registro TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS pets (
   id BIGSERIAL PRIMARY KEY,
   user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
-  id_reporte BIGINT REFERENCES reports(id) ON DELETE SET NULL,
   nombre VARCHAR(255) NOT NULL,
   tipo VARCHAR(255) NOT NULL,
   estado VARCHAR(255) NOT NULL,
@@ -24,9 +23,8 @@ CREATE TABLE IF NOT EXISTS reports (
   user_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
   pet_id BIGINT REFERENCES pets(id) ON DELETE SET NULL,
   tipo_reporte VARCHAR(255) NOT NULL,
-  estado_reporte VARCHAR(255) NOT NULL,
   fecha_evento TIMESTAMPTZ NOT NULL,
-  fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now(),
+  fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS imagen (
@@ -46,7 +44,6 @@ CREATE TABLE IF NOT EXISTS ubicacion (
   geom geometry(Point,4326)
 );
 
--- Opcional: disparador para poblar geom a partir de lat/long
 CREATE OR REPLACE FUNCTION ubicacion_set_geom()
 RETURNS trigger AS $$
 BEGIN
@@ -64,9 +61,9 @@ CREATE TRIGGER trg_set_geom
 BEFORE INSERT OR UPDATE ON ubicacion
 FOR EACH ROW EXECUTE FUNCTION ubicacion_set_geom();
 
--- Índices
 CREATE INDEX IF NOT EXISTS idx_reports_user_id ON reports(user_id);
 CREATE INDEX IF NOT EXISTS idx_reports_pet_id ON reports(pet_id);
+CREATE INDEX IF NOT EXISTS idx_pets_user_id ON pets(user_id);
 CREATE INDEX IF NOT EXISTS idx_imagen_reporte ON imagen(id_reporte);
 CREATE INDEX IF NOT EXISTS idx_ubicacion_reporte ON ubicacion(id_reporte);
 CREATE INDEX IF NOT EXISTS idx_ubicacion_geom ON ubicacion USING GIST (geom);

@@ -1,7 +1,7 @@
 package com.redpatitas.redPatitas.mapper;
 
-import com.redpatitas.redPatitas.dto.UserCreateDto;
-import com.redpatitas.redPatitas.dto.UserResponseDto;
+import com.redpatitas.redPatitas.dto.request.UserCreateDto;
+import com.redpatitas.redPatitas.dto.response.UserResponseDto;
 import com.redpatitas.redPatitas.entity.User;
 import org.springframework.stereotype.Component;
 

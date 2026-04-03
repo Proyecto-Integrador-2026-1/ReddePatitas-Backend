@@ -1,7 +1,7 @@
 package com.redpatitas.redPatitas.service.impl;
 
-import com.redpatitas.redPatitas.dto.UserCreateDto;
-import com.redpatitas.redPatitas.dto.UserResponseDto;
+import com.redpatitas.redPatitas.dto.request.UserCreateDto;
+import com.redpatitas.redPatitas.dto.response.UserResponseDto;
 import com.redpatitas.redPatitas.mapper.UserMapper;
 import com.redpatitas.redPatitas.repository.UserRepository;
 import com.redpatitas.redPatitas.service.interfaces.UserService;
