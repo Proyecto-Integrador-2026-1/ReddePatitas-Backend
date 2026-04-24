@@ -7,6 +7,6 @@ public record PetCreateDto(
         @NotBlank String tipo,
         @NotBlank String estado,
         @NotBlank String descripcion,
-        Long userId
+        String userId
 ) {
 }

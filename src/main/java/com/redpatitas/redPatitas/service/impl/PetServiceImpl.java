@@ -11,6 +11,7 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 
 @Service
@@ -24,7 +25,7 @@ public class PetServiceImpl implements PetService {
     @Override
     @Async
     public CompletableFuture<PetResponseDto> create(PetCreateDto dto) {
-        var user = dto.userId() != null ? userRepository.findById(dto.userId()).orElse(null) : null;
+        var user = dto.userId() != null ? userRepository.findById(UUID.fromString(dto.userId())).orElse(null) : null;
         var saved = petRepository.save(petMapper.toEntity(dto, user));
         return CompletableFuture.completedFuture(petMapper.toDto(saved));
     }

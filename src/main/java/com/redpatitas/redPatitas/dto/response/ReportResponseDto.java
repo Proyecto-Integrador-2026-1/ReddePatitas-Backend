@@ -13,7 +13,7 @@ public record ReportResponseDto(
         BigDecimal longitud,
         String imagenUrl,
         String thumbnailUrl,
-        Long userId,
+        String userId,
         Long petId
 ) {
 }

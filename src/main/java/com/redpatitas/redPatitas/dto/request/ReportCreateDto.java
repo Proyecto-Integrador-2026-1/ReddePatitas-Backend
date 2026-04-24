@@ -7,7 +7,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 
 public record ReportCreateDto(
-        Long userId,
+        String userId,
         Long petId,
         @NotBlank String tipoReporte,
         @NotNull Instant fechaEvento,

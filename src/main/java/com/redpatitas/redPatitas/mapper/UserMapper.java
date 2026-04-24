@@ -22,7 +22,7 @@ public class UserMapper {
 
     public UserResponseDto toDto(User user) {
         return new UserResponseDto(
-                user.getId(),
+                user.getId().toString(),
                 user.getNombre(),
                 user.getApellido(),
                 user.getTelefono(),

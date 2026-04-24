@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,7 +42,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Async
     public CompletableFuture<ReportResponseDto> create(ReportCreateDto dto, MultipartFile image) {
-        var user = dto.userId() != null ? userRepository.findById(dto.userId()).orElse(null) : null;
+        var user = dto.userId() != null ? userRepository.findById(UUID.fromString(dto.userId())).orElse(null) : null;
         var pet = dto.petId() != null ? petRepository.findById(dto.petId()).orElse(null) : null;
 
         var report = reportMapper.toEntity(dto, user, pet);
@@ -87,14 +88,14 @@ public class ReportServiceImpl implements ReportService {
                 : dto.tipo();
         String tipoReporte = dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "perdida";
         String nombrePet = dto.nombre() != null && !dto.nombre().isBlank() ? dto.nombre() : "Sin nombre";
-        var user = dto.userId() != null ? userRepository.findById(dto.userId()).orElse(null) : null;
+        var user = dto.userid() != null ? userRepository.findById(UUID.fromString(dto.userid())).orElse(null) : null;
 
         var pet = petRepository.save(petMapper.toEntity(new PetCreateDto(
             nombrePet,
                 tipoPet,
             tipoReporte,
             dto.descripcion(),
-            dto.userId()
+            dto.userid()
         ), user));
 
         var createDto = reportMapper.fromFrontendDto(dto, pet.getId());

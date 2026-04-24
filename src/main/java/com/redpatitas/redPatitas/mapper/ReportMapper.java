@@ -30,7 +30,7 @@ public class ReportMapper {
             : Instant.now();
         String tipoReporte = dto.estado() != null && !dto.estado().isBlank() ? dto.estado() : "perdida";
         return new ReportCreateDto(
-                dto.userId(),
+                dto.userid(),
                 petId,
                 tipoReporte,
             fechaEvento,
@@ -52,7 +52,7 @@ public class ReportMapper {
                 null,
                 null,
                 null,
-                report.getUser() != null ? report.getUser().getId() : null,
+                report.getUser() != null ? report.getUser().getId().toString() : null,
                 report.getPet() != null ? report.getPet().getId() : null
         );
     }
@@ -76,7 +76,7 @@ public class ReportMapper {
                 lon,
                 imagenUrl,
                 thumbnail,
-                report.getUser() != null ? report.getUser().getId() : null,
+                report.getUser() != null ? report.getUser().getId().toString() : null,
                 report.getPet() != null ? report.getPet().getId() : null
         );
     }

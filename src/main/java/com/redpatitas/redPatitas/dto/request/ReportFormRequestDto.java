@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 
 public record ReportFormRequestDto(
-        Long userId,
+        String userid,
         String estado,
         String tipo,
         @JsonProperty("tipo_otro") String tipoOtro,

@@ -7,7 +7,7 @@ services:
       POSTGRES_USER: redpatitas
       POSTGRES_PASSWORD: redpatitas_pass
     ports:
-      - "5432:5432"
+      - "5433:5432"
     volumes:
       - db_project1_data:/var/lib/postgresql/data
       - ./src/main/resources/db/migration/V1__init_schema.sql:/docker-entrypoint-initdb.d/01_init.sql
@@ -26,9 +26,50 @@ services:
     networks:
       - redpatitas_net
 
+  auth-db:
+    image: postgres:17-alpine
+    container_name: redpatitas_auth-db
+    environment:
+      POSTGRES_DB: auth_db
+      POSTGRES_USER: redpatitas
+      POSTGRES_PASSWORD: redpatitas
+    volumes:
+      - auth_redpatitas_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    networks:
+      - redpatitas_net
+
+  auth-backend:
+    build: ../authentication
+    ports:
+      - "8082:8080"
+    depends_on:
+      auth-db:
+        condition: service_healthy
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/auth_db
+      SPRING_DATASOURCE_USERNAME: redpatitas
+      SPRING_DATASOURCE_PASSWORD: redpatitas
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
+      SPRING_FLYWAY_URL: jdbc:postgresql://auth-db:5432/auth_db
+      SPRING_FLYWAY_USER: redpatitas
+      SPRING_FLYWAY_PASSWORD: redpatitas
+      APP_JWT_SECRET: change-me-in-development-use-at-least-32-bytes
+      APP_JWT_ACCESS_TOKEN_TTL_SECONDS: 3600
+      APP_JWT_REFRESH_TOKEN_TTL_SECONDS: 604800
+      APP_CORS_ALLOWED_ORIGINS: http://localhost:8081,http://localhost:3000,http://localhost:5173,http://localhost:8080
+    restart: unless-stopped
+    networks:
+      - redpatitas_net
 
 volumes:
   db_project1_data:
+  auth_redpatitas_data:
 
 networks:
   redpatitas_net:
