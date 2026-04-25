@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,12 +27,12 @@ import lombok.Setter;
 public class Ubicacion {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_ubicacion")
-    private Long idUbicacion;
+    private UUID idUbicacion;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_reporte")
+    @JoinColumn(name = "id_reporte", nullable = false)
     private Report report;
 
     @Column(name = "lugar_desaparicion", length = 300)
@@ -43,4 +44,5 @@ public class Ubicacion {
     @Column(name = "longitud", precision = 12, scale = 9)
     private BigDecimal longitud;
 
+    // geom no se mapea porque la base de datos lo maneja con trigger
 }
