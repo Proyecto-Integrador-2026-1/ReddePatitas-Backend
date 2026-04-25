@@ -5,15 +5,14 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import java.time.Instant;
+import java.util.UUID;
 
 @Entity
 @Table(name = "pets")
@@ -25,13 +24,11 @@ import lombok.Setter;
 public class Pet {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "user_id", nullable = false)
+    private UUID userId;
 
     @Column(name = "nombre", nullable = false)
     private String nombre;
@@ -44,4 +41,7 @@ public class Pet {
 
     @Column(name = "descripcion", nullable = false, length = 1000)
     private String descripcion;
+
+    @Column(name = "created_at")
+    private Instant createdAt;
 }

@@ -2,9 +2,10 @@ package com.redpatitas.redPatitas.dto.response;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 public record ReportPrincipalResponseDto(
-        Long id,
+        UUID id,                          // ← antes Long
         String nombre,
         String estado,
         String tipo,

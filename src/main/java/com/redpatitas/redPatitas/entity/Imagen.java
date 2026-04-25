@@ -10,6 +10,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -26,12 +27,12 @@ import lombok.Setter;
 public class Imagen {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id_imagen")
-    private Long idImagen;
+    private UUID idImagen;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_reporte")
+    @JoinColumn(name = "id_reporte", nullable = false)
     private Report report;
 
     @Column(name = "imagen_url", length = 700)

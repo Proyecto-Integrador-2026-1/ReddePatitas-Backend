@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
+
 
 public record ReportFormRequestDto(
         String userid,
@@ -13,7 +13,7 @@ public record ReportFormRequestDto(
         @JsonProperty("tipo_otro") String tipoOtro,
         String nombre,
         String descripcion,
-        @JsonProperty("fecha_desaparicion") LocalDate fechaDesaparicion,
+        @JsonProperty("fecha_desaparicion") Instant fechaDesaparicion,
         @JsonProperty("lugar_desaparicion") String lugarDesaparicion,
         BigDecimal latitud,
         BigDecimal longitud,
