@@ -9,43 +9,41 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import java.time.Instant;
+import java.util.UUID;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import java.time.Instant;
-import java.util.UUID;
 
 @Entity
-@Table(name = "reports")
+@Table(name = "message")
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Report {
-
+public class Message {
+    
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID id;
-
-    @Column(name = "user_id", nullable = false)
-    private UUID userId;  // ID del usuario externo (sin FK)
+    @Column(name = "mensaje_id")
+    private UUID mensajeId;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "pet_id", nullable = false)
-    private Pet pet;
+    @JoinColumn(name = "conversacion_id", nullable = false)
+    private Conversation conversation;
 
-    @Column(name = "tipo_reporte", nullable = false)
-    private String tipoReporte;
+    @Column(name = "id_remitente")
+    private UUID remitenteId;
 
-    @Column(name = "estado", nullable = false)
+    @Column(name = "contenido", length = 1000)
+    private String contenido;
+
+    @Column(name = "estado")
     private String estado;
 
-    @Column(name = "fecha_evento", nullable = false)
-    private Instant fechaEvento;
-
-    @Column(name = "fecha_creacion", nullable = false)
-    private Instant fechaCreacion;
+    @Column(name = "creado_en")
+    private Instant creadoEn;
 }

@@ -1,0 +1,94 @@
+{
+  "groups": [
+    {
+      "name": "image",
+      "type": "com.redpatitas.redPatitas.config.ImageProperties",
+      "sourceType": "com.redpatitas.redPatitas.config.ImageProperties"
+    },
+    {
+      "name": "image.thumbnail",
+      "type": "com.redpatitas.redPatitas.config.ImageProperties$Thumbnail",
+      "sourceType": "com.redpatitas.redPatitas.config.ImageProperties",
+      "sourceMethod": "thumbnail()"
+    },
+    {
+      "name": "storage",
+      "type": "com.redpatitas.redPatitas.config.StorageProperties",
+      "sourceType": "com.redpatitas.redPatitas.config.StorageProperties"
+    }
+  ],
+  "properties": [
+    {
+      "name": "app.jwt.expiration.ms",
+      "type": "java.lang.Long",
+      "description": "JWT expiration time in milliseconds."
+    },
+    {
+      "name": "app.jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT signing secret key."
+    },
+    {
+      "name": "azure.storage.connection-string",
+      "type": "java.lang.String",
+      "description": "Azure Blob Storage connection string."
+    },
+    {
+      "name": "azure.storage.container-name",
+      "type": "java.lang.String",
+      "description": "Container name for original images."
+    },
+    {
+      "name": "azure.storage.thumbnail-container-name",
+      "type": "java.lang.String",
+      "description": "Container name for thumbnails."
+    },
+    {
+      "name": "image.max-size-bytes",
+      "type": "java.lang.Long",
+      "description": "Maximum allowed image size in bytes after resizing.",
+      "sourceType": "com.redpatitas.redPatitas.config.ImageProperties",
+      "defaultValue": 0
+    },
+    {
+      "name": "image.thumbnail.height",
+      "type": "java.lang.Integer",
+      "description": "Thumbnail target height in pixels.",
+      "sourceType": "com.redpatitas.redPatitas.config.ImageProperties$Thumbnail",
+      "defaultValue": 0
+    },
+    {
+      "name": "image.thumbnail.width",
+      "type": "java.lang.Integer",
+      "description": "Thumbnail target width in pixels.",
+      "sourceType": "com.redpatitas.redPatitas.config.ImageProperties$Thumbnail",
+      "defaultValue": 0
+    },
+    {
+      "name": "spring.flyway.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enables Flyway database migrations."
+    },
+    {
+      "name": "spring.flyway.locations",
+      "type": "java.lang.String",
+      "description": "Classpath locations where Flyway migration scripts are found."
+    },
+    {
+      "name": "storage.mode",
+      "type": "java.lang.String",
+      "description": "Storage backend mode: local or azure.",
+      "sourceType": "com.redpatitas.redPatitas.config.StorageProperties"
+    },
+    {
+      "name": "storage.public-url",
+      "type": "java.lang.String",
+      "description": "Public base URL used for locally served uploads.",
+      "sourceType": "com.redpatitas.redPatitas.config.StorageProperties"
+    }
+  ],
+  "hints": [],
+  "ignored": {
+    "properties": []
+  }
+}
