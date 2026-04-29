@@ -20,7 +20,8 @@ CREATE TABLE IF NOT EXISTS reports (
   pet_id UUID NOT NULL REFERENCES pets(id) ON DELETE CASCADE,
   tipo_reporte VARCHAR(255) NOT NULL,
   fecha_evento TIMESTAMPTZ NOT NULL,
-  fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now()
+  fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now(),
+  estado VARCHAR(255) NOT NULL DEFAULT 'ACTIVO'
 );
 
 -- Tabla imagen
@@ -124,3 +125,86 @@ CREATE INDEX IF NOT EXISTS idx_pets_user_id ON pets(user_id);
 CREATE INDEX IF NOT EXISTS idx_imagen_reporte ON imagen(id_reporte);
 CREATE INDEX IF NOT EXISTS idx_ubicacion_reporte ON ubicacion(id_reporte);
 CREATE INDEX IF NOT EXISTS idx_ubicacion_geom ON ubicacion USING GIST (geom);
+
+-- Tabla report_publications (reportes de publicaciones)
+CREATE TABLE IF NOT EXISTS report_publications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  report_id UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL,
+  razon VARCHAR(100) NOT NULL,
+  descripcion VARCHAR(1000),
+  fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now(),
+  CONSTRAINT uq_report_user UNIQUE (report_id, user_id)
+);
+
+-- Función para crear un report_publication a partir de JSON (usa misma estructura de flujo — 'userid' en el payload)
+CREATE OR REPLACE FUNCTION crear_reporte_publicacion(data JSONB)
+RETURNS UUID AS $$
+DECLARE
+  v_user_id UUID;
+  v_report_id UUID;
+  v_razon VARCHAR;
+  v_descripcion VARCHAR;
+  v_rp_id UUID;
+BEGIN
+  v_user_id := (data->>'userid')::UUID;
+  v_report_id := (data->>'reportId')::UUID;
+  v_razon := COALESCE(data->>'razon', 'otro');
+  v_descripcion := COALESCE(data->>'descripcion', '');
+
+  -- Validar que el reporte exista
+  IF NOT EXISTS (SELECT 1 FROM reports WHERE id = v_report_id) THEN
+    RAISE EXCEPTION 'Reporte no encontrado: %', v_report_id;
+  END IF;
+
+  -- Si ya existe un reporte de publicación por el mismo usuario, devolverlo
+  SELECT id INTO v_rp_id FROM report_publications
+  WHERE report_id = v_report_id AND user_id = v_user_id
+  LIMIT 1;
+
+  IF v_rp_id IS NOT NULL THEN
+    RETURN v_rp_id;
+  END IF;
+
+  -- Insertar nuevo report_publication
+  INSERT INTO report_publications (report_id, user_id, razon, descripcion, fecha_creacion)
+  VALUES (v_report_id, v_user_id, COALESCE(NULLIF(v_razon, ''), 'otro'), v_descripcion, COALESCE((data->>'createdAt')::timestamptz, now()))
+  RETURNING id INTO v_rp_id;
+
+  RETURN v_rp_id;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Índices para report_publications
+CREATE INDEX IF NOT EXISTS idx_report_publications_report_id ON report_publications(report_id);
+CREATE INDEX IF NOT EXISTS idx_report_publications_user_id ON report_publications(user_id);
+
+-- Tabla conversation
+CREATE TABLE IF NOT EXISTS conversation (
+  conversacion_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id_report UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
+  owner_id UUID NOT NULL,
+  user_id2 UUID NOT NULL,
+  creado_en TIMESTAMPTZ DEFAULT now(),
+  CONSTRAINT uq_conversation_report_owner_user2 UNIQUE (id_report, owner_id, user_id2)
+);
+
+CREATE INDEX IF NOT EXISTS idx_conversation_report_id ON conversation(id_report);
+CREATE INDEX IF NOT EXISTS idx_conversation_owner_id ON conversation(owner_id);
+CREATE INDEX IF NOT EXISTS idx_conversation_user_id2 ON conversation(user_id2);
+
+-- Tabla message
+CREATE TABLE IF NOT EXISTS message (
+  mensaje_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  conversacion_id UUID NOT NULL REFERENCES conversation(conversacion_id) ON DELETE CASCADE,
+  id_remitente UUID NOT NULL,
+  contenido VARCHAR(1000),
+  estado VARCHAR(255),
+  creado_en TIMESTAMPTZ DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_message_conversacion_id ON message(conversacion_id);
+CREATE INDEX IF NOT EXISTS idx_message_remitente_id ON message(id_remitente);
+
+-- Índice parcial para acelerar conteo de mensajes no leídos por conversación
+CREATE INDEX IF NOT EXISTS idx_message_unread ON message(conversacion_id, estado) WHERE estado = 'NO_LEIDO';
