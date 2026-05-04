@@ -37,16 +37,16 @@ public class ContactController {
         return ResponseEntity.ok(resp);
     }
 
-    // @Operation(summary = "Obtener el id del publicador de una mascota (ownerId)", description = "Retorna el id del publicador de una mascota específica. Si el requester es el publicador, se indica que es su publicación.")
-    // @GetMapping("/pets/{petId}/contact")
-    // public ResponseEntity<ContactResponseDto> getPetContact(
-    //         @PathVariable UUID petId,
-    //         @RequestHeader(name = "X-User-Id", required = false) String userIdHeader
-    // ) {
-    //     UUID requesterId = parseUserIdHeader(userIdHeader);
-    //     ContactResponseDto resp = contactService.getContactByPetId(petId, requesterId);
-    //     return ResponseEntity.ok(resp);
-    // }
+    @Operation(summary = "Obtener el id del publicador de una mascota (ownerId)", description = "Retorna el id del publicador de una mascota específica. Si el requester es el publicador, se indica que es su publicación.")
+    @GetMapping("/pets/{petId}/contact")
+    public ResponseEntity<ContactResponseDto> getPetContact(
+            @PathVariable UUID petId,
+            @RequestHeader(name = "X-User-Id", required = false) String userIdHeader
+    ) {
+        UUID requesterId = parseUserIdHeader(userIdHeader);
+        ContactResponseDto resp = contactService.getContactByPetId(petId, requesterId);
+        return ResponseEntity.ok(resp);
+    }
 
     private UUID parseUserIdHeader(String userIdHeader) {
         if (userIdHeader == null || userIdHeader.isBlank()) {

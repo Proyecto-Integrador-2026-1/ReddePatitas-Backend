@@ -24,4 +24,5 @@ public class ConversationResponseDto {
     private long unreadCount;
     private String ownerName;
     private String user2Name;
+    private String publisherName;
 }
