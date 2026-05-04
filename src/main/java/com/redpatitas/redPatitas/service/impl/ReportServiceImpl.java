@@ -121,6 +121,7 @@ public class ReportServiceImpl implements ReportService {
 
                     return new ReportPrincipalResponseDto(
                             report.getId(),
+                            report.getUserId(),
                             pet != null && pet.getNombre() != null && !pet.getNombre().isBlank() ? pet.getNombre() : "Sin nombre",
                             estado != null && !estado.isBlank() ? estado : "perdido",
                             pet != null && pet.getTipo() != null && !pet.getTipo().isBlank() ? pet.getTipo() : "desconocido",

@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record ReportPrincipalResponseDto(
         UUID id,                          // ← antes Long
+        UUID userId,                      // nuevo campo para el ID del usuario
         String nombre,
         String estado,
         String tipo,

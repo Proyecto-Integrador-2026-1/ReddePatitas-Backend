@@ -46,10 +46,11 @@ public class MessageController {
 
     @Operation(summary = "Listar conversaciones para un usuario", description = "Obtiene la lista de conversaciones relacionadas a un usuario específico")
     @GetMapping("/conversations")
-    public ResponseEntity<List<?>> listConversations(@RequestHeader(name = "X-User-Id", required = false) String userIdHeader) {
+    public ResponseEntity<Map<String, Object>> listConversations(@RequestHeader(name = "X-User-Id", required = false) String userIdHeader) {
         UUID userId = parseUserIdHeader(userIdHeader);
-        var convs = conversationService.listConversationsForUser(userId);
-        return ResponseEntity.ok(convs);
+        var convDtos = conversationService.listConversationsDtoForUser(userId);
+        long totalUnread = messageService.countUnreadForUser(userId);
+        return ResponseEntity.ok(Map.of("conversations", convDtos, "totalUnread", totalUnread));
     }
 
     @Operation(summary = "Obtener mensajes de una conversación", description = "Obtiene la lista de mensajes relacionados a una conversación específica")
