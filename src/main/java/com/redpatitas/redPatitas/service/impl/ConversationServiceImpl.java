@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 
+import com.redpatitas.redPatitas.dto.response.ConversationResponseDto;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -19,6 +20,7 @@ import java.util.UUID;
 public class ConversationServiceImpl implements ConversationService {
     private final ConversationRepository conversationRepository;
     private final ReportRepository reportRepository;
+    private final com.redpatitas.redPatitas.repository.MessageRepository messageRepository;
 
     @Override
     public Conversation getOrCreateConversationByReportId(UUID reportId, UUID requesterId) {
@@ -41,5 +43,23 @@ public class ConversationServiceImpl implements ConversationService {
     @Override
     public List<Conversation> listConversationsForUser(UUID userId) {
         return conversationRepository.findByOwnerIdOrUserId2OrderByCreadoEnDesc(userId, userId);
+    }
+
+    @Override
+    public List<ConversationResponseDto> listConversationsDtoForUser(UUID userId) {
+        var convs = listConversationsForUser(userId);
+        return convs.stream().map(conv -> {
+            var dto = new ConversationResponseDto();
+            dto.setConversacionId(conv.getConversacionId());
+            dto.setReportId(conv.getReport() != null ? conv.getReport().getId() : null);
+            dto.setOwnerId(conv.getOwnerId());
+            dto.setUserId2(conv.getUserId2());
+            dto.setCreadoEn(conv.getCreadoEn());
+
+            long unread = messageRepository.countUnreadByConversationForUser(conv.getConversacionId(), userId);
+            dto.setUnreadCount(unread);
+
+            return dto;
+        }).toList();
     }
 }

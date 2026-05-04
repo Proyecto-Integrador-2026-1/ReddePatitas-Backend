@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 import org.springframework.http.HttpStatus;
@@ -85,6 +86,31 @@ public class MessageServiceImpl implements MessageService {
         // Bulk update: marcar como LEIDO todos los mensajes NO_LEIDO cuyo remitente != requesterId
         int updated = messageRepository.markConversationMessagesAsRead(conversacionId, requesterId);
         return updated;
+    }
+
+    @Override
+    public long countUnreadForUser(UUID userId) {
+        return messageRepository.countUnreadForUser(userId);
+    }
+
+    @Override
+    public long countUnreadByConversation(UUID conversationId, UUID userId) {
+        return messageRepository.countUnreadByConversationForUser(conversationId, userId);
+    }
+
+    @Override
+    public Optional<MessageResponseDto> getLastMessageForConversation(UUID conversationId) {
+        var maybe = messageRepository.findTopByConversation_ConversacionIdOrderByCreadoEnDesc(conversationId);
+        if (maybe.isEmpty()) return Optional.empty();
+        var m = maybe.get();
+        return Optional.of(new MessageResponseDto(
+                m.getMensajeId(),
+                m.getConversation() != null ? m.getConversation().getConversacionId() : null,
+                m.getRemitenteId(),
+                m.getContenido(),
+                m.getEstado(),
+                m.getCreadoEn()
+        ));
     }
 
     private MessageResponseDto mapToDto(Message m) {
