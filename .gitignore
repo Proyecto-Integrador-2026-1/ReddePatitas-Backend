@@ -1,0 +1,13 @@
+# Ignorar carpeta de compilación
+target/
+local-uploads/
+
+# Ignorar archivos temporales
+*.log
+*.class
+
+# Ignorar configuraciones locales de IDE
+.idea/
+.vscode/
+*.iml
+
