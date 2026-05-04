@@ -2,6 +2,7 @@ package com.redpatitas.redPatitas.controller;
 
 import com.redpatitas.redPatitas.dto.request.SendMessageRequestDto;
 import com.redpatitas.redPatitas.dto.response.MessageResponseDto;
+import com.redpatitas.redPatitas.repository.ReportRepository;
 import com.redpatitas.redPatitas.service.interfaces.MessageService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -27,6 +28,7 @@ public class MessageController {
 
     private final MessageService messageService;
     private final ConversationService conversationService;
+    private final ReportRepository reportRepository;
 
     @PostMapping("/messages")
     @Operation(summary = "Enviar mensaje en una conversación o iniciar una nueva por reporte", description = "Si se proporciona conversacionId, se envía el mensaje ahí (si el remitente es parte). Si no, se inicia o reutiliza una conversación relacionada al reportId.")
@@ -38,6 +40,14 @@ public class MessageController {
 
         if ((dto.getConversacionId() == null) && (dto.getReportId() == null)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "reportId o conversacionId requerido");
+        }
+
+        if (dto.getConversacionId() == null && dto.getReportId() != null) {
+            var report = reportRepository.findById(dto.getReportId())
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found"));
+            if (remitenteId.equals(report.getUserId())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ConversacionId requerido para el publicador");
+            }
         }
 
         MessageResponseDto resp = messageService.sendMessage(dto.getReportId(), dto.getConversacionId(), remitenteId, dto.getContenido());
