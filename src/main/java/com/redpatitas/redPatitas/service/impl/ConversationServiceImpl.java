@@ -73,32 +73,29 @@ public class ConversationServiceImpl implements ConversationService {
 
     @Override
     public Conversation getOrCreateConversationByReportId(UUID reportId, UUID userId) {
-        var existing = conversationRepository.findByReport_Id(reportId);
-        if (existing.isPresent()) {
-            var conv = existing.get();
-            if (!userId.equals(conv.getOwnerId()) &&
-                    (conv.getUserId2() == null || conv.getUserId2().equals(conv.getOwnerId()))) {
-                conv.setUserId2(userId);
-                return conversationRepository.save(conv);
-            }
-            return conv;
-        }
-
-        
         var report = reportRepository.findById(reportId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found"));
 
+        UUID ownerId = report.getUserId();
+        if (userId.equals(ownerId)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ConversacionId requerido para el publicador");
+        }
+
+        var existing = conversationRepository.findByReport_IdAndOwnerIdAndUserId2(reportId, ownerId, userId);
+        if (existing.isPresent()) {
+            return existing.get();
+        }
+
         var conv = new Conversation();
         conv.setReport(report);
-        UUID ownerId = report.getUserId();
         conv.setOwnerId(ownerId);
-        conv.setUserId2(userId.equals(ownerId) ? ownerId : userId);
+        conv.setUserId2(userId);
         conv.setCreadoEn(Instant.now());
 
         try {
             return conversationRepository.save(conv);
         } catch (DataIntegrityViolationException ex) {
-            return conversationRepository.findByReport_Id(reportId)
+            return conversationRepository.findByReport_IdAndOwnerIdAndUserId2(reportId, ownerId, userId)
                     .orElseThrow(() -> ex);
         }
     }
