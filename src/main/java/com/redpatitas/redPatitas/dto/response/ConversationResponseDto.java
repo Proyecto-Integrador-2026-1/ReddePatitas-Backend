@@ -9,6 +9,7 @@ import lombok.Setter;
 import java.time.Instant;
 import java.util.UUID;
 
+
 @Getter
 @Setter
 @NoArgsConstructor
@@ -20,6 +21,7 @@ public class ConversationResponseDto {
     private UUID ownerId;
     private UUID userId2;
     private Instant creadoEn;
-
-    private long unreadCount; // unread messages for the requesting user in this conversation
+    private long unreadCount;
+    private String ownerName;
+    private String user2Name;
 }
