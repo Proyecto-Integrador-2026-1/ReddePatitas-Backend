@@ -179,32 +179,80 @@ $$ LANGUAGE plpgsql;
 CREATE INDEX IF NOT EXISTS idx_report_publications_report_id ON report_publications(report_id);
 CREATE INDEX IF NOT EXISTS idx_report_publications_user_id ON report_publications(user_id);
 
--- Tabla conversation
-CREATE TABLE IF NOT EXISTS conversation (
-  conversacion_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  id_report UUID NOT NULL REFERENCES reports(id) ON DELETE CASCADE,
-  owner_id UUID NOT NULL,
-  user_id2 UUID NOT NULL,
-  creado_en TIMESTAMPTZ DEFAULT now(),
-  CONSTRAINT uq_conversation_report_owner_user2 UNIQUE (id_report, owner_id, user_id2)
+
+-- 1. TABLA CONVERSACIÓN (compartida)
+CREATE TABLE conversation (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    report_id UUID NOT NULL,
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_conversation_report_id ON conversation(id_report);
-CREATE INDEX IF NOT EXISTS idx_conversation_owner_id ON conversation(owner_id);
-CREATE INDEX IF NOT EXISTS idx_conversation_user_id2 ON conversation(user_id2);
+CREATE INDEX idx_conversation_report_id ON conversation(report_id);
 
--- Tabla message
-CREATE TABLE IF NOT EXISTS message (
-  mensaje_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-  conversacion_id UUID NOT NULL REFERENCES conversation(conversacion_id) ON DELETE CASCADE,
-  id_remitente UUID NOT NULL,
-  contenido VARCHAR(1000),
-  estado VARCHAR(255),
-  creado_en TIMESTAMPTZ DEFAULT now()
+
+-- 2. TABLA MENSAJE
+CREATE TABLE message (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    conversation_id UUID NOT NULL REFERENCES conversation(id) ON DELETE CASCADE,
+    sender_id UUID NOT NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(20) DEFAULT 'ENVIADO',  -- 'ENVIADO', 'LEIDO', 'NO_LEIDO'
+    created_at TIMESTAMPTZ DEFAULT now()
 );
 
-CREATE INDEX IF NOT EXISTS idx_message_conversacion_id ON message(conversacion_id);
-CREATE INDEX IF NOT EXISTS idx_message_remitente_id ON message(id_remitente);
+CREATE INDEX idx_message_conversation_id ON message(conversation_id);
+CREATE INDEX idx_message_sender_id ON message(sender_id);
+CREATE INDEX idx_message_created_at ON message(created_at);
 
--- Índice parcial para acelerar conteo de mensajes no leídos por conversación
-CREATE INDEX IF NOT EXISTS idx_message_unread ON message(conversacion_id, estado) WHERE estado = 'NO_LEIDO';
+-- 🚀 ÍNDICE PARCIAL CLAVE: solo mensajes NO_LEIDOS
+CREATE INDEX idx_message_unread ON message(conversation_id, status) 
+WHERE status = 'NO_LEIDO';
+
+
+
+-- 3. TABLA CONVERSACIÓN DE USUARIO
+CREATE TABLE user_conversation (
+    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id UUID NOT NULL,
+    other_user_id UUID NOT NULL,
+    conversation_id UUID NOT NULL REFERENCES conversation(id) ON DELETE CASCADE,
+    report_id UUID NOT NULL,
+    last_message TEXT,
+    last_message_at TIMESTAMPTZ,
+    unread_count INT DEFAULT 0,
+    deleted_at TIMESTAMPTZ,
+    created_at TIMESTAMPTZ DEFAULT now(),
+    updated_at TIMESTAMPTZ DEFAULT now(),
+    
+    CONSTRAINT uq_user_conversation UNIQUE (user_id, other_user_id, report_id)
+);
+
+CREATE INDEX idx_user_conv_user_id ON user_conversation(user_id);
+CREATE INDEX idx_user_conv_other_user ON user_conversation(other_user_id);
+CREATE INDEX idx_user_conv_deleted ON user_conversation(deleted_at);
+CREATE INDEX idx_user_conv_report ON user_conversation(report_id);
+CREATE INDEX idx_user_conv_last_message ON user_conversation(last_message_at DESC);
+
+
+-- 4. TRIGGER para mantener unread_count actualizado
+CREATE OR REPLACE FUNCTION update_unread_count()
+RETURNS TRIGGER AS $$
+BEGIN
+    UPDATE user_conversation uc
+    SET unread_count = (
+        SELECT COUNT(*) FROM message m
+        WHERE m.conversation_id = NEW.conversation_id
+          AND m.sender_id != uc.user_id
+          AND m.status = 'NO_LEIDO'
+    ),
+    updated_at = NOW()
+    WHERE uc.conversation_id = NEW.conversation_id;
+    
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_update_unread_count
+AFTER INSERT OR UPDATE OF status ON message
+FOR EACH ROW
+EXECUTE FUNCTION update_unread_count();

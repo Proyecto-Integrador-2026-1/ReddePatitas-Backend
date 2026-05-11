@@ -1,16 +1,18 @@
 package com.redpatitas.redPatitas.dto.request;
 
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import lombok.Data;
 import java.util.UUID;
 
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 public class SendMessageRequestDto {
-    private UUID reportId; // optional if conversacionId provided
-    private UUID conversacionId; // optional
-    private String contenido;
+    @NotNull
+    private UUID reportId;
+    
+    @NotNull
+    private UUID receiverId; 
+    
+    @NotBlank
+    private String content;
 }

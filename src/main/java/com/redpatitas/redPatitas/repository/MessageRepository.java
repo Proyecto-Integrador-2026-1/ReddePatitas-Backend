@@ -2,28 +2,26 @@ package com.redpatitas.redPatitas.repository;
 
 import com.redpatitas.redPatitas.entity.Message;
 import org.springframework.data.jpa.repository.JpaRepository;
-import java.util.List;
-import java.util.UUID;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
 public interface MessageRepository extends JpaRepository<Message, UUID> {
-    List<Message> findByConversation_ConversacionIdOrderByCreadoEnAsc(UUID conversacionId);
-    List<Message> findByConversation_ConversacionIdAndEstadoOrderByCreadoEnAsc(UUID conversacionId, String estado);
-    long countByConversation_ConversacionIdAndEstado(UUID conversacionId, String estado);
+
+    List<Message> findByConversationIdOrderByCreatedAtAsc(UUID conversationId);
+
+    Optional<Message> findTopByConversationIdOrderByCreatedAtDesc(UUID conversationId);
 
     @Modifying
     @Transactional
-    @Query("UPDATE Message m SET m.estado = 'LEIDO' WHERE m.conversation.conversacionId = :conversationId AND m.estado = 'NO_LEIDO' AND m.remitenteId <> :requesterId")
-    int markConversationMessagesAsRead(@Param("conversationId") UUID conversationId, @Param("requesterId") UUID requesterId);
+    @Query("UPDATE Message m SET m.status = 'LEIDO' WHERE m.conversationId = :conversationId AND m.senderId <> :userId AND m.status = 'ENVIADO'")
+    int markConversationMessagesAsRead(@Param("conversationId") UUID conversationId, @Param("userId") UUID userId);
 
-    @Query("SELECT COUNT(m) FROM Message m WHERE m.estado = 'NO_LEIDO' AND m.remitenteId <> :userId AND (m.conversation.ownerId = :userId OR m.conversation.userId2 = :userId)")
-    long countUnreadForUser(@Param("userId") UUID userId);
-
-    @Query("SELECT COUNT(m) FROM Message m WHERE m.conversation.conversacionId = :conversationId AND m.estado = 'NO_LEIDO' AND m.remitenteId <> :userId")
+    @Query("select count(m) from Message m where m.conversationId = :conversationId and m.status = 'ENVIADO' and m.senderId <> :userId")
     long countUnreadByConversationForUser(@Param("conversationId") UUID conversationId, @Param("userId") UUID userId);
-
-    java.util.Optional<Message> findTopByConversation_ConversacionIdOrderByCreadoEnDesc(UUID conversacionId);
 }

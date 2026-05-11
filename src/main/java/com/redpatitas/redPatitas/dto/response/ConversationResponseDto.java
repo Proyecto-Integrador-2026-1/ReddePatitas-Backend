@@ -1,28 +1,19 @@
 package com.redpatitas.redPatitas.dto.response;
 
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
-
+import lombok.Data;
 import java.time.Instant;
 import java.util.UUID;
 
-
-@Getter
-@Setter
-@NoArgsConstructor
-@AllArgsConstructor
+@Data
 @Builder
 public class ConversationResponseDto {
-    private UUID conversacionId;
+    private UUID id;  // user_conversation.id
+    private UUID conversationId;
+    private UUID otherUserId;
+    private String otherUserName;  // desde auth service
     private UUID reportId;
-    private UUID ownerId;
-    private UUID userId2;
-    private Instant creadoEn;
-    private long unreadCount;
-    private String ownerName;
-    private String user2Name;
-    private String publisherName;
+    private String lastMessage;
+    private Instant lastMessageAt;
+    private int unreadCount;
 }
