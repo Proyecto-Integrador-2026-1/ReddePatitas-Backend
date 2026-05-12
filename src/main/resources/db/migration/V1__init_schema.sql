@@ -180,6 +180,7 @@ CREATE INDEX IF NOT EXISTS idx_report_publications_report_id ON report_publicati
 CREATE INDEX IF NOT EXISTS idx_report_publications_user_id ON report_publications(user_id);
 
 
+
 -- 1. TABLA CONVERSACIÓN (compartida)
 CREATE TABLE conversation (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -189,14 +190,13 @@ CREATE TABLE conversation (
 
 CREATE INDEX idx_conversation_report_id ON conversation(report_id);
 
-
 -- 2. TABLA MENSAJE
 CREATE TABLE message (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     conversation_id UUID NOT NULL REFERENCES conversation(id) ON DELETE CASCADE,
     sender_id UUID NOT NULL,
     content TEXT NOT NULL,
-    status VARCHAR(20) DEFAULT 'ENVIADO',  -- 'ENVIADO', 'LEIDO', 'NO_LEIDO'
+    status VARCHAR(20) DEFAULT 'ENVIADO',
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
@@ -204,13 +204,11 @@ CREATE INDEX idx_message_conversation_id ON message(conversation_id);
 CREATE INDEX idx_message_sender_id ON message(sender_id);
 CREATE INDEX idx_message_created_at ON message(created_at);
 
--- 🚀 ÍNDICE PARCIAL CLAVE: solo mensajes NO_LEIDOS
+-- Índice parcial para mensajes NO_LEIDOS (optimización)
 CREATE INDEX idx_message_unread ON message(conversation_id, status) 
 WHERE status = 'NO_LEIDO';
 
-
-
--- 3. TABLA CONVERSACIÓN DE USUARIO
+-- 3. TABLA CONVERSACIÓN DE USUARIO (cada usuario tiene su copia)
 CREATE TABLE user_conversation (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     user_id UUID NOT NULL,
@@ -220,21 +218,23 @@ CREATE TABLE user_conversation (
     last_message TEXT,
     last_message_at TIMESTAMPTZ,
     unread_count INT DEFAULT 0,
-    deleted_at TIMESTAMPTZ,
+    deleted_at TIMESTAMPTZ,          -- soft delete
     created_at TIMESTAMPTZ DEFAULT now(),
-    updated_at TIMESTAMPTZ DEFAULT now(),
-    
-    CONSTRAINT uq_user_conversation UNIQUE (user_id, other_user_id, report_id)
+    updated_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- 📌 ÍNDICE ÚNICO PARCIAL
+CREATE UNIQUE INDEX uq_user_conversation_active ON user_conversation (user_id, other_user_id, report_id) 
+WHERE deleted_at IS NULL;
+
+-- Índices adicionales para rendimiento
 CREATE INDEX idx_user_conv_user_id ON user_conversation(user_id);
 CREATE INDEX idx_user_conv_other_user ON user_conversation(other_user_id);
 CREATE INDEX idx_user_conv_deleted ON user_conversation(deleted_at);
 CREATE INDEX idx_user_conv_report ON user_conversation(report_id);
 CREATE INDEX idx_user_conv_last_message ON user_conversation(last_message_at DESC);
 
-
--- 4. TRIGGER para mantener unread_count actualizado
+-- 4. TRIGGER para mantener unread_count actualizado (opcional pero recomendado)
 CREATE OR REPLACE FUNCTION update_unread_count()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -246,7 +246,7 @@ BEGIN
           AND m.status = 'NO_LEIDO'
     ),
     updated_at = NOW()
-    WHERE uc.conversation_id = NEW.conversation_id;
+    WHERE uc.conversation_id = NEW.conversation_id AND uc.deleted_at IS NULL;
     
     RETURN NEW;
 END;
