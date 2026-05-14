@@ -21,7 +21,12 @@ CREATE TABLE IF NOT EXISTS reports (
   tipo_reporte VARCHAR(255) NOT NULL,
   fecha_evento TIMESTAMPTZ NOT NULL,
   fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now(),
-  estado VARCHAR(255) NOT NULL DEFAULT 'ACTIVO'
+  estado VARCHAR(255) NOT NULL DEFAULT 'ACTIVO',
+  reencontrado BOOLEAN NOT NULL DEFAULT false,
+  -- Columna generada para mostrar explícitamente TRUE / FALSE en mayúsculas
+  reencontrado_text VARCHAR(5) GENERATED ALWAYS AS (CASE WHEN reencontrado THEN 'TRUE' ELSE 'FALSE' END) STORED,
+  mensaje_resolucion VARCHAR(1000),
+  fecha_resuelta TIMESTAMPTZ
 );
 
 -- Tabla imagen
@@ -125,6 +130,9 @@ CREATE INDEX IF NOT EXISTS idx_pets_user_id ON pets(user_id);
 CREATE INDEX IF NOT EXISTS idx_imagen_reporte ON imagen(id_reporte);
 CREATE INDEX IF NOT EXISTS idx_ubicacion_reporte ON ubicacion(id_reporte);
 CREATE INDEX IF NOT EXISTS idx_ubicacion_geom ON ubicacion USING GIST (geom);
+-- Índices para nuevas columnas de resolución
+CREATE INDEX IF NOT EXISTS idx_reports_reencontrado ON reports(reencontrado);
+CREATE INDEX IF NOT EXISTS idx_reports_fecha_resuelta ON reports(fecha_resuelta);
 
 -- Tabla report_publications (reportes de publicaciones)
 CREATE TABLE IF NOT EXISTS report_publications (

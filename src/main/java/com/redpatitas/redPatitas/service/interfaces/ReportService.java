@@ -13,4 +13,6 @@ public interface ReportService {
     CompletableFuture<ReportResponseDto> createFromFrontendForm(ReportFormRequestDto dto, MultipartFile image);
     CompletableFuture<List<ReportResponseDto>> findAll();
     CompletableFuture<List<ReportPrincipalResponseDto>> findAllForPrincipal();
+    CompletableFuture<List<ReportPrincipalResponseDto>> findAllResolvedForPrincipal();
+    CompletableFuture<ReportResponseDto> resolveReport(java.util.UUID reportId, String userIdHeader, com.redpatitas.redPatitas.dto.request.ResolveReportRequestDto dto);
 }

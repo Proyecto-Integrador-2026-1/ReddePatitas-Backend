@@ -30,6 +30,7 @@ public class ReportMapper {
                 thumbnail,
                 report.getUserId(),
                 report.getPet() != null ? report.getPet().getId() : null
+            , report.getReencontrado(), report.getMensajeResolucion(), report.getFechaResuelta()
         );
     }
 }

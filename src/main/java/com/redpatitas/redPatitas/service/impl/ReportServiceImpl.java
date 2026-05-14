@@ -65,8 +65,8 @@ public class ReportServiceImpl implements ReportService {
                     .setParameter(1, json)
                     .getSingleResult();
 
-            // 3. Obtener el reporte
-            Report report = reportRepository.findById(reportId)
+                // 3. Obtener el reporte (con pet para evitar LazyInitialization)
+                Report report = reportRepository.findByIdWithPet(reportId)
                     .orElseThrow(() -> new RuntimeException("Reporte no encontrado después de creación"));
 
             // 4. Guardar imagen asociada
@@ -96,6 +96,41 @@ public class ReportServiceImpl implements ReportService {
 
     @Override
     @Async
+    public CompletableFuture<ReportResponseDto> resolveReport(java.util.UUID reportId, String userIdHeader, com.redpatitas.redPatitas.dto.request.ResolveReportRequestDto dto) {
+        try {
+                Report report = reportRepository.findByIdWithPet(reportId)
+                    .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.NOT_FOUND, "Reporte no encontrado"));
+
+            java.util.UUID ownerId = report.getUserId();
+            if (userIdHeader == null || !ownerId.equals(java.util.UUID.fromString(userIdHeader))) {
+                throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN, "No autorizado");
+            }
+
+            report.setEstado("RESUELTO");
+            report.setReencontrado(dto.reencontrado());
+            report.setMensajeResolucion(dto.mensaje());
+            report.setFechaResuelta(java.time.Instant.now());
+
+
+            reportRepository.save(report);
+
+            var imagenGuardada = imagenRepository.findLatestByReportId(reportId).orElse(null);
+            var ubicacion = ubicacionRepository.findByReportId(reportId).orElse(null);
+            var response = reportMapper.toDto(report, imagenGuardada, ubicacion);
+
+            // TODO: Notificar servicio de Auth/Badge si aplica
+
+            return CompletableFuture.completedFuture(response);
+        } catch (org.springframework.web.server.ResponseStatusException ex) {
+            throw ex;
+        } catch (Exception e) {
+            log.error("Error al resolver reporte", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    @Async
     public CompletableFuture<List<ReportResponseDto>> findAll() {
         List<ReportResponseDto> list = reportRepository.findAll().stream()
                 .map(r -> {
@@ -109,7 +144,7 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Async
     public CompletableFuture<List<ReportPrincipalResponseDto>> findAllForPrincipal() {
-        var reports = reportRepository.findAllWithPet().stream()
+        var reports = reportRepository.findAllActiveWithPet().stream()
                 .map(report -> {
                     var pet = report.getPet();
                     var img = imagenRepository.findLatestByReportId(report.getId()).orElse(null);
@@ -142,4 +177,41 @@ public class ReportServiceImpl implements ReportService {
 
         return CompletableFuture.completedFuture(reports);
     }
+
+        @Override
+        @Async
+        public CompletableFuture<List<ReportPrincipalResponseDto>> findAllResolvedForPrincipal() {
+        var reports = reportRepository.findAllResolvedWithPet().stream()
+            .map(report -> {
+                var pet = report.getPet();
+                var img = imagenRepository.findLatestByReportId(report.getId()).orElse(null);
+                var ub = ubicacionRepository.findByReportId(report.getId()).orElse(null);
+
+                String estado = pet != null && pet.getEstado() != null && !pet.getEstado().isBlank()
+                    ? pet.getEstado()
+                    : report.getTipoReporte();
+
+                return new ReportPrincipalResponseDto(
+                    report.getId(),
+                    report.getUserId(),
+                    pet != null && pet.getNombre() != null && !pet.getNombre().isBlank() ? pet.getNombre() : "Sin nombre",
+                    estado != null && !estado.isBlank() ? estado : "perdido",
+                    pet != null && pet.getTipo() != null && !pet.getTipo().isBlank() ? pet.getTipo() : "desconocido",
+                    pet != null ? pet.getDescripcion() : null,
+                    ub != null ? ub.getLugarDesaparicion() : null,
+                    ub != null ? ub.getLatitud() : null,
+                    ub != null ? ub.getLongitud() : null,
+                    img != null ? img.getImagenUrl() : null,
+                    img != null ? img.getThumbnailUrl() : null,
+                    report.getFechaCreacion(),
+                    report.getFechaEvento()
+                );
+            })
+            .filter(item -> item.latitud() != null && item.longitud() != null)
+            .sorted(Comparator.comparing(ReportPrincipalResponseDto::fecha_publicacion,
+                Comparator.nullsLast(Comparator.reverseOrder())))
+            .toList();
+
+        return CompletableFuture.completedFuture(reports);
+        }
 }

@@ -4,7 +4,9 @@ import com.redpatitas.redPatitas.dto.request.ReportFormRequestDto;
 import com.redpatitas.redPatitas.dto.response.ReportPrincipalResponseDto;
 import com.redpatitas.redPatitas.dto.response.ReportResponseDto;
 import com.redpatitas.redPatitas.service.interfaces.ReportService;
+import com.redpatitas.redPatitas.dto.request.ResolveReportRequestDto;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -18,10 +20,15 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -38,6 +45,13 @@ public class ReportController {
     @ApiResponse(responseCode = "200", description = "Lista de reportes obtenida exitosamente")
     public CompletableFuture<ResponseEntity<List<ReportPrincipalResponseDto>>> findAllForPrincipal() {
         return reportService.findAllForPrincipal().thenApply(ResponseEntity::ok);
+    }
+
+    @GetMapping("/resolved")
+    @Operation(summary = "Listar casos resueltos",
+               description = "Retorna los reportes marcados como resueltos (Casos exitosos)")
+    public CompletableFuture<ResponseEntity<List<ReportPrincipalResponseDto>>> findAllResolved() {
+        return reportService.findAllResolvedForPrincipal().thenApply(ResponseEntity::ok);
     }
 
     @PostMapping(value = "/form", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -57,6 +71,18 @@ public class ReportController {
         } catch (Exception exception) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Payload JSON inválido", exception);
         }
+    }
+
+    @PutMapping("/{id}/resolve")
+    @Operation(summary = "Marcar reporte como resuelto",
+               description = "Propietario marca su publicación como resuelta, con opción de indicar si se reencontró y dejar mensaje de agradecimiento")
+        public CompletableFuture<ResponseEntity<ReportResponseDto>> resolveReport(
+            @Parameter(description = "UUID del reporte", required = true)
+            @PathVariable("id") UUID id,
+            @RequestHeader("X-User-Id") String userIdHeader,
+            @RequestBody ResolveReportRequestDto dto
+    ) {
+        return reportService.resolveReport(id, userIdHeader, dto).thenApply(ResponseEntity::ok);
     }
 
 }
