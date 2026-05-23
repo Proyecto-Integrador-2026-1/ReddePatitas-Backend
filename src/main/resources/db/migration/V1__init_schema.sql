@@ -26,7 +26,9 @@ CREATE TABLE IF NOT EXISTS reports (
   -- Columna generada para mostrar explícitamente TRUE / FALSE en mayúsculas
   reencontrado_text VARCHAR(5) GENERATED ALWAYS AS (CASE WHEN reencontrado THEN 'TRUE' ELSE 'FALSE' END) STORED,
   mensaje_resolucion VARCHAR(1000),
-  fecha_resuelta TIMESTAMPTZ
+  fecha_resuelta TIMESTAMPTZ,
+  oculto BOOLEAN NOT NULL DEFAULT false,
+  eliminado BOOLEAN NOT NULL DEFAULT false
 );
 
 -- Tabla imagen
@@ -264,3 +266,16 @@ CREATE TRIGGER trigger_update_unread_count
 AFTER INSERT OR UPDATE OF status ON message
 FOR EACH ROW
 EXECUTE FUNCTION update_unread_count();
+
+CREATE TABLE IF NOT EXISTS moderation_action (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  tipo_accion VARCHAR(50) NOT NULL,
+  tipo_objetivo VARCHAR(50) NOT NULL,
+  id_objetivo UUID NOT NULL,
+  realizado_por UUID NOT NULL,
+  motivo VARCHAR(1000),
+  metadata JSONB,
+  creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX IF NOT EXISTS idx_moderation_action_target ON moderation_action(tipo_objetivo, id_objetivo);

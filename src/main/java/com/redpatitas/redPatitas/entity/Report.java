@@ -57,4 +57,10 @@ public class Report {
 
     @Column(name = "fecha_resuelta")
     private Instant fechaResuelta;
+
+    @Column(name = "oculto", nullable = false)
+    private boolean oculto;
+
+    @Column(name = "eliminado", nullable = false)
+    private boolean eliminado;
 }

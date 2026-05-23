@@ -60,14 +60,13 @@
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <!-- Spring Boot Security (desactivado para pruebas locales de reportes + swagger)
+        <!-- Spring Boot Security 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
-        -->
-
-        <!-- JWT (desactivado para pruebas locales de reportes + swagger)
+            -->
+        <!-- JWT (desactivado para pruebas locales de reportes + swagger) 
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
@@ -86,7 +85,6 @@
             <scope>runtime</scope>
         </dependency>
         -->
-
         <!-- PostgreSQL Driver -->
         <dependency>
             <groupId>org.postgresql</groupId>
