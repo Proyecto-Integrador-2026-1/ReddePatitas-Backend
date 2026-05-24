@@ -50,12 +50,14 @@ public class AdminServiceImpl implements AdminService {
         long totalReportedPublications = reportRepository.countByEstadoIn(java.util.List.of("REPORTADA", "EN_REVISION"));
         long totalResolvedPublications = reportRepository.countByEstado("RESUELTO");
         long totalDeletedPublications = reportRepository.countByEstado("ELIMINADO");
+        long totalHiddenPublications = reportRepository.countByOcultoTrue();
         // Pending = publications that are ACTIVO, REPORTADA, EN_REVISION or OCULTADO (exclude ELIMINADO/RESUELTO)
         long pendingReports = reportRepository.countByEstadoIn(java.util.List.of("ACTIVO", "REPORTADA", "EN_REVISION", "OCULTADO"));
         m.put("total_Publicaciones", totalPublications);
         m.put("total_Publicaciones_Reportadas", totalReportedPublications);
         m.put("total_Publicaciones_Resueltas", totalResolvedPublications);
         m.put("total_Publicaciones_Eliminadas", totalDeletedPublications);
+        m.put("total_Publicaciones_Ocultas", totalHiddenPublications);
         m.put("reports_Pendientes", pendingReports);
         return m;
     }

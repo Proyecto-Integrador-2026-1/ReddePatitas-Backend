@@ -46,14 +46,14 @@ public class AdminController {
     }
 
     @GetMapping("/hidden-publications")
-    //@PreAuthorize("hasRole('ADMIN')")
+    
     public ResponseEntity<List<ReportedPublicationDto>> listHidden(@RequestHeader(name = "X-User-Id", required = true) String userId) {
         List<ReportedPublicationDto> list = adminService.listHiddenPublications();
         return ResponseEntity.ok(list);
     }
 
     @GetMapping("/deleted-publications")
-    //@PreAuthorize("hasRole('ADMIN')")
+    
     public ResponseEntity<List<ReportedPublicationDto>> listDeleted(@RequestHeader(name = "X-User-Id", required = true) String userId) {
         List<ReportedPublicationDto> list = adminService.listDeletedPublications();
         return ResponseEntity.ok(list);

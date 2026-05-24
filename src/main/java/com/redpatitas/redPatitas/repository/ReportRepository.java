@@ -24,4 +24,6 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
     java.util.Optional<Report> findByIdWithPet(java.util.UUID id);
 
     long countByEstadoNot(String estado);
+    
+    long countByOcultoTrue();
 }
