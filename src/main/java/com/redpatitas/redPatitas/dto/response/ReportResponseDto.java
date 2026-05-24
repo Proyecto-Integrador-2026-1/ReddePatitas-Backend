@@ -16,5 +16,8 @@ public record ReportResponseDto(
         String thumbnailUrl,
         UUID userId,
         UUID petId
+        , Boolean reencontrado,
+        String mensajeResolucion,
+        Instant fechaResuelta
 ) {
 }

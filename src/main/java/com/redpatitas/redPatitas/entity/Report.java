@@ -48,4 +48,19 @@ public class Report {
 
     @Column(name = "fecha_creacion", nullable = false)
     private Instant fechaCreacion;
+
+    @Column(name = "reencontrado")
+    private Boolean reencontrado;
+
+    @Column(name = "mensaje_resolucion", length = 1000)
+    private String mensajeResolucion;
+
+    @Column(name = "fecha_resuelta")
+    private Instant fechaResuelta;
+
+    @Column(name = "oculto", nullable = false)
+    private boolean oculto;
+
+    @Column(name = "eliminado", nullable = false)
+    private boolean eliminado;
 }
