@@ -23,8 +23,6 @@ CREATE TABLE IF NOT EXISTS reports (
   fecha_creacion TIMESTAMPTZ NOT NULL DEFAULT now(),
   estado VARCHAR(255) NOT NULL DEFAULT 'ACTIVO',
   reencontrado BOOLEAN NOT NULL DEFAULT false,
-  -- Columna generada para mostrar explícitamente TRUE / FALSE en mayúsculas
-  reencontrado_text VARCHAR(5) GENERATED ALWAYS AS (CASE WHEN reencontrado THEN 'TRUE' ELSE 'FALSE' END) STORED,
   mensaje_resolucion VARCHAR(1000),
   fecha_resuelta TIMESTAMPTZ,
   oculto BOOLEAN NOT NULL DEFAULT false,
@@ -274,7 +272,6 @@ CREATE TABLE IF NOT EXISTS moderation_action (
   id_objetivo UUID NOT NULL,
   realizado_por UUID NOT NULL,
   motivo VARCHAR(1000),
-  metadata JSONB,
   creado_en TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 

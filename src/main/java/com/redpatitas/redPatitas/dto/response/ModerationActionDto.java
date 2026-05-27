@@ -10,7 +10,6 @@ public record ModerationActionDto(
         UUID idObjetivo,
         UUID realizadoPor,
         String motivo,
-        String metadatos,
         Instant creadoEn
 ) {
 }

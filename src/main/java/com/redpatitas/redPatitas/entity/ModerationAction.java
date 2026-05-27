@@ -42,9 +42,6 @@ public class ModerationAction {
     @Column(name = "motivo", length = 1000)
     private String motivo;
 
-    @Column(name = "metadata", columnDefinition = "jsonb")
-    private String metadatos;
-
     @Column(name = "creado_en", nullable = false)
     private Instant creadoEn;
 }

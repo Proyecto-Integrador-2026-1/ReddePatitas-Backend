@@ -429,19 +429,16 @@ public class AdminServiceImpl implements AdminService {
             .idObjetivo(reportId)
             .realizadoPor(adminId)
             .motivo(motivo != null ? motivo : "")
-            .metadatos(null)
             .creadoEn(Instant.now())
             .build();
-        // Insert using native query to cast metadata to jsonb explicitly
         try {
-            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,metadata,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?,?)");
+            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
             insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
             insert.setParameter(2, action.getIdObjetivo());
-            insert.setParameter(3, null);
-            insert.setParameter(4, action.getMotivo());
-            insert.setParameter(5, action.getRealizadoPor());
-            insert.setParameter(6, action.getTipoAccion());
-            insert.setParameter(7, action.getTipoObjetivo());
+            insert.setParameter(3, action.getMotivo());
+            insert.setParameter(4, action.getRealizadoPor());
+            insert.setParameter(5, action.getTipoAccion());
+            insert.setParameter(6, action.getTipoObjetivo());
             insert.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -466,18 +463,16 @@ public class AdminServiceImpl implements AdminService {
             .idObjetivo(reportId)
             .realizadoPor(adminId)
             .motivo(motivo != null ? motivo : "")
-            .metadatos(null)
             .creadoEn(Instant.now())
             .build();
         try {
-            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,metadata,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?,?)");
+            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
             insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
             insert.setParameter(2, action.getIdObjetivo());
-            insert.setParameter(3, null);
-            insert.setParameter(4, action.getMotivo());
-            insert.setParameter(5, action.getRealizadoPor());
-            insert.setParameter(6, action.getTipoAccion());
-            insert.setParameter(7, action.getTipoObjetivo());
+            insert.setParameter(3, action.getMotivo());
+            insert.setParameter(4, action.getRealizadoPor());
+            insert.setParameter(5, action.getTipoAccion());
+            insert.setParameter(6, action.getTipoObjetivo());
             insert.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -502,18 +497,16 @@ public class AdminServiceImpl implements AdminService {
             .idObjetivo(reportId)
             .realizadoPor(adminId)
             .motivo(motivo != null ? motivo : "")
-            .metadatos(null)
             .creadoEn(Instant.now())
             .build();
         try {
-            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,metadata,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?,?)");
+            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
             insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
             insert.setParameter(2, action.getIdObjetivo());
-            insert.setParameter(3, null);
-            insert.setParameter(4, action.getMotivo());
-            insert.setParameter(5, action.getRealizadoPor());
-            insert.setParameter(6, action.getTipoAccion());
-            insert.setParameter(7, action.getTipoObjetivo());
+            insert.setParameter(3, action.getMotivo());
+            insert.setParameter(4, action.getRealizadoPor());
+            insert.setParameter(5, action.getTipoAccion());
+            insert.setParameter(6, action.getTipoObjetivo());
             insert.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -541,18 +534,16 @@ public class AdminServiceImpl implements AdminService {
             .idObjetivo(reportId)
             .realizadoPor(adminId)
             .motivo(motivo != null ? motivo : "")
-            .metadatos(null)
             .creadoEn(Instant.now())
             .build();
         try {
-            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,metadata,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?,?)");
+            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
             insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
             insert.setParameter(2, action.getIdObjetivo());
-            insert.setParameter(3, null);
-            insert.setParameter(4, action.getMotivo());
-            insert.setParameter(5, action.getRealizadoPor());
-            insert.setParameter(6, action.getTipoAccion());
-            insert.setParameter(7, action.getTipoObjetivo());
+            insert.setParameter(3, action.getMotivo());
+            insert.setParameter(4, action.getRealizadoPor());
+            insert.setParameter(5, action.getTipoAccion());
+            insert.setParameter(6, action.getTipoObjetivo());
             insert.executeUpdate();
         } catch (Exception e) {
             throw new RuntimeException(e);
@@ -572,7 +563,6 @@ public class AdminServiceImpl implements AdminService {
             a.getIdObjetivo(),
             a.getRealizadoPor(),
             a.getMotivo(),
-            a.getMetadatos(),
             a.getCreadoEn()
         )).toList();
         }
