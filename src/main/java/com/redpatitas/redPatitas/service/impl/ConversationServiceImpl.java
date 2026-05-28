@@ -14,6 +14,7 @@ import com.redpatitas.redPatitas.repository.MessageRepository;
 import com.redpatitas.redPatitas.repository.ReportRepository;
 import com.redpatitas.redPatitas.repository.UserConversationRepository;
 import com.redpatitas.redPatitas.service.interfaces.ConversationService;
+import com.redpatitas.redPatitas.service.interfaces.WebSocketService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -35,6 +36,7 @@ public class ConversationServiceImpl implements ConversationService {
     private final UserConversationRepository userConversationRepository;
     private final ReportRepository reportRepository;
     private final AuthServiceClient authServiceClient;
+    private final WebSocketService webSocketService;  // 👈 nuevo: servicio de notificaciones WebSocket
     
     @Override
     @Transactional
@@ -63,18 +65,49 @@ public class ConversationServiceImpl implements ConversationService {
         // 3. Actualizar último mensaje y contadores
         updateConversationMetadata(conversation.getConversacionId());
 
-        // 4. Obtener nombre del remitente
+        // 4. Obtener nombre del remitente para la notificación
         ContactInfoResponse senderInfo = authServiceClient.getContactInfo(senderId);
-        String senderName = senderInfo != null ? senderInfo.nombre() + " " + senderInfo.apellido() : "Usuario";
+        String senderName = senderInfo != null ? 
+            (senderInfo.nombre() != null ? senderInfo.nombre() + " " + (senderInfo.apellido() != null ? senderInfo.apellido() : "") : "Usuario").trim() : "Usuario";
+
+        // 👇 NUEVO: Enviar notificación WebSocket al receptor
+        enviarNotificacionWebSocket(conversation, receiverId, senderId, senderName, request.getContent());
 
         return MessageResponseDto.builder()
             .id(message.getId())
             .senderId(message.getSenderId())
-                .senderName(senderName)
+            .senderName(senderName)
             .content(message.getContent())
             .status(message.getStatus())
             .createdAt(message.getCreatedAt())
-                .build();
+            .build();
+    }
+
+    /**
+     * Envía notificación WebSocket al receptor de un mensaje
+     */
+    private void enviarNotificacionWebSocket(Conversation conversation, UUID receiverId, UUID senderId, String senderName, String contenido) {
+        if (receiverId == null) return;
+        
+        // Buscar user_conversation del receptor para obtener el ID
+        userConversationRepository.findActiveByUserAndOtherAndReport(
+            receiverId, senderId, conversation.getReport().getId()
+        ).ifPresent(userConv -> {
+            // Contar mensajes no leídos del receptor (después de este mensaje)
+            int unreadCount = (int) messageRepository.countUnreadByConversationForUser(
+                conversation.getConversacionId(), receiverId
+            );
+            
+            webSocketService.notifyNewMessage(
+                receiverId,
+                senderName,
+                contenido,
+                conversation.getConversacionId(),
+                userConv.getId(),
+                senderId,
+                unreadCount
+            );
+        });
     }
 
     private Conversation resolveConversation(SendMessageRequestDto request) {
@@ -153,7 +186,8 @@ public class ConversationServiceImpl implements ConversationService {
         
         return userConvs.stream().map(uc -> {
             ContactInfoResponse otherUser = contactInfoMap.get(uc.getOtherUserId());
-            String otherName = otherUser != null ? otherUser.nombre() + " " + otherUser.apellido() : "Usuario";
+            String otherName = otherUser != null ? 
+                (otherUser.nombre() != null ? otherUser.nombre() + " " + (otherUser.apellido() != null ? otherUser.apellido() : "") : "Usuario").trim() : "Usuario";
             
             return ConversationResponseDto.builder()
                     .id(uc.getId())
@@ -189,7 +223,8 @@ public class ConversationServiceImpl implements ConversationService {
         
         return messages.stream().map(msg -> {
             ContactInfoResponse sender = contactInfoMap.get(msg.getSenderId());
-            String senderName = sender != null ? sender.nombre() + " " + sender.apellido() : "Usuario";
+            String senderName = sender != null ? 
+                (sender.nombre() != null ? sender.nombre() + " " + (sender.apellido() != null ? sender.apellido() : "") : "Usuario").trim() : "Usuario";
             
             return MessageResponseDto.builder()
                     .id(msg.getId())
@@ -218,6 +253,12 @@ public class ConversationServiceImpl implements ConversationService {
         uc.setUpdatedAt(Instant.now());
         userConversationRepository.save(uc);
         
+        // 👇 NUEVO: Notificar al otro usuario que sus mensajes fueron leídos
+        // Obtener el otro participante
+        UUID otherUserId = uc.getOtherUserId();
+        int unreadCount = (int) messageRepository.countUnreadByConversationForUser(uc.getConversationId(), otherUserId);
+        webSocketService.notifyMessagesRead(otherUserId, uc.getConversationId(), unreadCount);
+        
         return updated;
     }
     
@@ -228,6 +269,14 @@ public class ConversationServiceImpl implements ConversationService {
         if (deleted == 0) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Conversación no encontrada");
         }
+        
+        // 👇 NUEVO: Notificar al otro usuario que esta conversación fue eliminada (opcional)
+        // Para no sobrecargar, decidimos no notificar al otro usuario cuando alguien elimina su copia
+        // Si quieres notificar, descomenta:
+        // UserConversation uc = userConversationRepository.findById(userConversationId).orElse(null);
+        // if (uc != null) {
+        //     webSocketService.notifyConversationDeleted(uc.getOtherUserId(), userConversationId);
+        // }
     }
     
     public long countUnreadForUser(UUID userId) {

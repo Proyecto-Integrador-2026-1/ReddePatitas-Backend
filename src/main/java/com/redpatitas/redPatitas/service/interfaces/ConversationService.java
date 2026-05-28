@@ -13,4 +13,6 @@ public interface ConversationService {
     List<MessageResponseDto> getConversationMessages(UUID userConversationId, UUID userId);
     int markAsRead(UUID userConversationId, UUID userId);
     void deleteConversation(UUID userConversationId, UUID userId);
+    long countUnreadForUser(UUID userId);
+    long countUnreadByConversation(UUID userConversationId, UUID userId);
 }
