@@ -649,14 +649,40 @@ public class AdminServiceImpl implements AdminService {
     public List<ModerationActionDto> listModerationHistory(int page, int size) {
     var p = PageRequest.of(page, size, Sort.by("creadoEn").descending());
     var actions = moderationActionRepository.findAll(p);
-    return actions.stream().map(a -> new ModerationActionDto(
-        a.getId(),
-        a.getTipoAccion(),
-        a.getTipoObjetivo(),
-        a.getIdObjetivo(),
-        a.getRealizadoPor(),
-        a.getMotivo(),
-        a.getCreadoEn()
-    )).toList();
+
+    // collect admin IDs who executed actions
+    var adminIds = actions.stream()
+        .map(ModerationAction::getRealizadoPor)
+        .filter(id -> id != null)
+        .distinct()
+        .toList();
+
+    java.util.Map<java.util.UUID, com.redpatitas.redPatitas.dto.response.ContactInfoResponse> contacts = new java.util.HashMap<>();
+    try {
+        var fetched = authServiceClient.getBatchContactInfo(adminIds);
+        if (fetched != null) contacts.putAll(fetched);
+    } catch (Exception ignored) {}
+
+    return actions.stream().map(a -> {
+        String actorName = null;
+        try {
+            var info = contacts.get(a.getRealizadoPor());
+            if (info != null) {
+                actorName = (info.nombre() != null ? info.nombre() : "") + (info.apellido() != null ? " " + info.apellido() : "");
+                if (actorName.isBlank()) actorName = null;
+            }
+        } catch (Exception ignored) {}
+
+        return new ModerationActionDto(
+            a.getId(),
+            a.getTipoAccion(),
+            a.getTipoObjetivo(),
+            a.getIdObjetivo(),
+            a.getRealizadoPor(),
+            actorName,
+            a.getMotivo(),
+            a.getCreadoEn()
+        );
+    }).toList();
     }
 }
