@@ -1,4 +1,4 @@
-/* package com.redpatitas.redPatitas.config;
+package com.redpatitas.redPatitas.config;
 
 import org.springframework.stereotype.Component;
 
@@ -13,4 +13,3 @@ public class SecurityProperties {
         return true;
     }
 }
- */

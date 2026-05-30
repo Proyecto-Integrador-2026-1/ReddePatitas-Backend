@@ -1,4 +1,4 @@
-/* package com.redpatitas.redPatitas.config;
+package com.redpatitas.redPatitas.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.redpatitas.redPatitas.security.JwtAuthenticationFilter;
@@ -65,11 +65,13 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/v1/auth/login", "/api/v1/auth/refresh", "/api/v1/auth/register").permitAll()
+                //.requestMatchers(HttpMethod.GET, "/api/reports", "/api/reports/resolved").permitAll()
+                //.requestMatchers(HttpMethod.POST, "/api/reports/form").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers("/error").permitAll()
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/v1/users/internal/**").permitAll()
-                .anyRequest().authenticated())
+                .requestMatchers("/api/admin/**").authenticated()
+                .anyRequest().permitAll())
             .addFilterBefore(jwtAuthenticationFilter, org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
@@ -117,4 +119,3 @@ public class SecurityConfig {
         return source;
     }
 }
- */
