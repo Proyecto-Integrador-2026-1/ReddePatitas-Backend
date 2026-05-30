@@ -15,9 +15,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 
 import com.redpatitas.redPatitas.dto.request.AdminActionRequestDto;
 import com.redpatitas.redPatitas.dto.response.ModerationActionDto;
+import com.redpatitas.redPatitas.dto.response.UserMetricsResponse;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -34,6 +36,16 @@ public class AdminController {
     public ResponseEntity<Map<String, Object>> getMetrics(@RequestHeader(name = "X-User-Id", required = true) String userId) {
         // TODO: validate that `userId` corresponds to an ADMIN via AuthServiceClient
         Map<String, Object> metrics = adminService.getMetrics();
+        return ResponseEntity.ok(metrics);
+    }
+
+    @GetMapping("/user-metrics")
+    //@PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<
+    
+    UserMetricsResponse> getUserMetrics(@RequestHeader(name = "X-User-Id", required = true) String userId) {
+        // TODO: validate that `userId` corresponds to an ADMIN via AuthServiceClient
+        var metrics = adminService.getUserMetrics();
         return ResponseEntity.ok(metrics);
     }
 
@@ -62,7 +74,7 @@ public class AdminController {
     @PostMapping("/reported-publications/{reportId}/ocultar")
     //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> ocultarPublicacion(@RequestHeader(name = "X-User-Id", required = true) String userId,
-                                                   @PathVariable("reportId") java.util.UUID reportId,
+                                                   @PathVariable("reportId") UUID reportId,
                                                    @RequestBody AdminActionRequestDto body) {
         // TODO: validar rol ADMIN
         adminService.ocultarPublicacion(reportId, java.util.UUID.fromString(userId), body.motivo());
@@ -72,7 +84,7 @@ public class AdminController {
     @PostMapping("/reported-publications/{reportId}/eliminar")
     //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> eliminarPublicacion(@RequestHeader(name = "X-User-Id", required = true) String userId,
-                                                    @PathVariable("reportId") java.util.UUID reportId,
+                                                    @PathVariable("reportId") UUID reportId,
                                                     @RequestBody AdminActionRequestDto body) {
         // TODO: validar rol ADMIN
         adminService.eliminarPublicacion(reportId, java.util.UUID.fromString(userId), body.motivo());
@@ -82,7 +94,7 @@ public class AdminController {
     @PostMapping("/reported-publications/{reportId}/ignorar")
     //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> ignorarReporte(@RequestHeader(name = "X-User-Id", required = true) String userId,
-                                               @PathVariable("reportId") java.util.UUID reportId,
+                                               @PathVariable("reportId") UUID reportId,
                                                @RequestBody AdminActionRequestDto body) {
         // TODO: validar rol ADMIN
         adminService.ignorarReporte(reportId, java.util.UUID.fromString(userId), body.motivo());
@@ -92,7 +104,7 @@ public class AdminController {
     @PostMapping("/reported-publications/{reportId}/restaurar")
     //@PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> restaurarPublicacion(@RequestHeader(name = "X-User-Id", required = true) String userId,
-                                                     @PathVariable("reportId") java.util.UUID reportId,
+                                                     @PathVariable("reportId") UUID reportId,
                                                      @RequestBody AdminActionRequestDto body) {
         // TODO: validar rol ADMIN
         adminService.restaurarPublicacion(reportId, java.util.UUID.fromString(userId), body.motivo());
@@ -107,6 +119,38 @@ public class AdminController {
         // TODO: validar rol ADMIN
         List<ModerationActionDto> list = adminService.listModerationHistory(page, size);
         return ResponseEntity.ok(list);
+    }
+
+    @PostMapping("/users/{userId}/block")
+    public ResponseEntity<Void> blockUser(@RequestHeader(name = "X-User-Id", required = true) String userId,
+                                          @PathVariable("userId") UUID targetUserId,
+                                          @RequestBody AdminActionRequestDto body) {
+        adminService.blockUser(targetUserId, UUID.fromString(userId), body.motivo());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/users/{userId}/unblock")
+    public ResponseEntity<Void> unblockUser(@RequestHeader(name = "X-User-Id", required = true) String userId,
+                                            @PathVariable("userId") UUID targetUserId,
+                                            @RequestBody AdminActionRequestDto body) {
+        adminService.unblockUser(targetUserId, UUID.fromString(userId), body.motivo());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/users/{userId}/deactivate")
+    public ResponseEntity<Void> deactivateUser(@RequestHeader(name = "X-User-Id", required = true) String userId,
+                                               @PathVariable("userId") UUID targetUserId,
+                                               @RequestBody AdminActionRequestDto body) {
+        adminService.deactivateUser(targetUserId, UUID.fromString(userId), body.motivo());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/users/{userId}/activate")
+    public ResponseEntity<Void> activateUser(@RequestHeader(name = "X-User-Id", required = true) String userId,
+                                             @PathVariable("userId") UUID targetUserId,
+                                             @RequestBody AdminActionRequestDto body) {
+        adminService.activateUser(targetUserId, UUID.fromString(userId), body.motivo());
+        return ResponseEntity.ok().build();
     }
 
 }

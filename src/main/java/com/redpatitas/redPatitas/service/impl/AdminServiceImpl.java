@@ -11,6 +11,8 @@ import com.redpatitas.redPatitas.service.interfaces.AdminService;
 import jakarta.persistence.EntityManager;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 //import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.time.Instant;
@@ -19,6 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import com.redpatitas.redPatitas.dto.response.UserMetricsResponse;
 
 @Service
 public class AdminServiceImpl implements AdminService {
@@ -412,110 +415,200 @@ public class AdminServiceImpl implements AdminService {
         }).collect(Collectors.toList());
     }
 
-        @Override
-        @Transactional
-        //@PreAuthorize("hasRole('ADMIN')")
-        public void ocultarPublicacion(java.util.UUID reportId, java.util.UUID adminId, String motivo) {
-        var report = reportRepository.findByIdWithPet(reportId)
-            .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
-        report.setOculto(true);
-        report.setEstado("OCULTADO");
-        report.setMensajeResolucion(motivo != null ? "Oculto por admin: " + motivo : "Oculto por admin");
-        reportRepository.save(report);
-
-        ModerationAction action = ModerationAction.builder()
-            .tipoAccion("OCULTAR_PUBLICACION")
-            .tipoObjetivo("REPORTE")
-            .idObjetivo(reportId)
-            .realizadoPor(adminId)
-            .motivo(motivo != null ? motivo : "")
-            .creadoEn(Instant.now())
-            .build();
+    @Override
+    @Transactional(readOnly = true)
+    public UserMetricsResponse getUserMetrics() {
         try {
-            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
-            insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
-            insert.setParameter(2, action.getIdObjetivo());
-            insert.setParameter(3, action.getMotivo());
-            insert.setParameter(4, action.getRealizadoPor());
-            insert.setParameter(5, action.getTipoAccion());
-            insert.setParameter(6, action.getTipoObjetivo());
-            insert.executeUpdate();
+            return authServiceClient.getUserMetrics();
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to fetch user metrics from auth service", e);
         }
-        }
-
-        @Override
-        @Transactional
-        //@PreAuthorize("hasRole('ADMIN')")
-        public void eliminarPublicacion(java.util.UUID reportId, java.util.UUID adminId, String motivo) {
-        var report = reportRepository.findByIdWithPet(reportId)
-            .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
-        report.setEliminado(true);
-        report.setEstado("ELIMINADO");
-        report.setFechaResuelta(Instant.now());
-        report.setMensajeResolucion(motivo != null ? "Eliminado por admin: " + motivo : "Eliminado por admin");
-        reportRepository.save(report);
-
-        ModerationAction action = ModerationAction.builder()
-            .tipoAccion("ELIMINAR_PUBLICACION")
-            .tipoObjetivo("REPORTE")
-            .idObjetivo(reportId)
-            .realizadoPor(adminId)
-            .motivo(motivo != null ? motivo : "")
-            .creadoEn(Instant.now())
-            .build();
-        try {
-            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
-            insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
-            insert.setParameter(2, action.getIdObjetivo());
-            insert.setParameter(3, action.getMotivo());
-            insert.setParameter(4, action.getRealizadoPor());
-            insert.setParameter(5, action.getTipoAccion());
-            insert.setParameter(6, action.getTipoObjetivo());
-            insert.executeUpdate();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        }
-
-        @Override
-        @Transactional
-        //@PreAuthorize("hasRole('ADMIN')")
-        public void ignorarReporte(java.util.UUID reportId, java.util.UUID adminId, String motivo) {
-        var report = reportRepository.findByIdWithPet(reportId)
-            .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
-            // Al ignorar un reporte por parte del admin, la publicación vuelve a estar activa
-            report.setEstado("ACTIVO");
-            report.setFechaResuelta(null);
-            report.setMensajeResolucion(motivo != null ? "Ignorado por admin: " + motivo : "Ignorado por admin");
-        reportRepository.save(report);
-
-        ModerationAction action = ModerationAction.builder()
-            .tipoAccion("IGNORAR_REPORTE")
-            .tipoObjetivo("REPORTE")
-            .idObjetivo(reportId)
-            .realizadoPor(adminId)
-            .motivo(motivo != null ? motivo : "")
-            .creadoEn(Instant.now())
-            .build();
-        try {
-            var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
-            insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
-            insert.setParameter(2, action.getIdObjetivo());
-            insert.setParameter(3, action.getMotivo());
-            insert.setParameter(4, action.getRealizadoPor());
-            insert.setParameter(5, action.getTipoAccion());
-            insert.setParameter(6, action.getTipoObjetivo());
-            insert.executeUpdate();
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
-        }
+    }
 
     @Override
     @Transactional
-    public void restaurarPublicacion(java.util.UUID reportId, java.util.UUID adminId, String motivo) {
+    public void blockUser(UUID userId, UUID adminId, String motivo) {
+        try {
+            authServiceClient.blockUser(userId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to block user in auth service", e);
+        }
+
+        ModerationAction action = ModerationAction.builder()
+                .tipoAccion("BLOQUEAR_USUARIO")
+                .tipoObjetivo("USUARIO")
+                .idObjetivo(userId)
+                .realizadoPor(adminId)
+                .motivo(motivo != null ? motivo : "")
+                .creadoEn(Instant.now())
+                .build();
+        moderationActionRepository.save(action);
+    }
+
+    @Override
+    @Transactional
+    public void unblockUser(UUID userId, UUID adminId, String motivo) {
+        try {
+            authServiceClient.unblockUser(userId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to unblock user in auth service", e);
+        }
+
+        ModerationAction action = ModerationAction.builder()
+                .tipoAccion("DESBLOQUEAR_USUARIO")
+                .tipoObjetivo("USUARIO")
+                .idObjetivo(userId)
+                .realizadoPor(adminId)
+                .motivo(motivo != null ? motivo : "")
+                .creadoEn(Instant.now())
+                .build();
+        moderationActionRepository.save(action);
+    }
+
+    @Override
+    @Transactional
+    public void deactivateUser(UUID userId, UUID adminId, String motivo) {
+        try {
+            authServiceClient.deactivateUser(userId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to deactivate user in auth service", e);
+        }
+
+        ModerationAction action = ModerationAction.builder()
+                .tipoAccion("DESACTIVAR_USUARIO")
+                .tipoObjetivo("USUARIO")
+                .idObjetivo(userId)
+                .realizadoPor(adminId)
+                .motivo(motivo != null ? motivo : "")
+                .creadoEn(Instant.now())
+                .build();
+        moderationActionRepository.save(action);
+    }
+
+    @Override
+    @Transactional
+    public void activateUser(UUID userId, UUID adminId, String motivo) {
+        try {
+            authServiceClient.activateUser(userId);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to activate user in auth service", e);
+        }
+
+        ModerationAction action = ModerationAction.builder()
+                .tipoAccion("ACTIVAR_USUARIO")
+                .tipoObjetivo("USUARIO")
+                .idObjetivo(userId)
+                .realizadoPor(adminId)
+                .motivo(motivo != null ? motivo : "")
+                .creadoEn(Instant.now())
+                .build();
+        moderationActionRepository.save(action);
+    }
+
+    @Override
+    @Transactional
+    //@PreAuthorize("hasRole('ADMIN')")
+    public void ocultarPublicacion(UUID reportId, UUID adminId, String motivo) {
+    var report = reportRepository.findByIdWithPet(reportId)
+        .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
+    report.setOculto(true);
+    report.setEstado("OCULTADO");
+    report.setMensajeResolucion(motivo != null ? "Oculto por admin: " + motivo : "Oculto por admin");
+    reportRepository.save(report);
+
+    ModerationAction action = ModerationAction.builder()
+        .tipoAccion("OCULTAR_PUBLICACION")
+        .tipoObjetivo("REPORTE")
+        .idObjetivo(reportId)
+        .realizadoPor(adminId)
+        .motivo(motivo != null ? motivo : "")
+        .creadoEn(Instant.now())
+        .build();
+    try {
+        var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
+        insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
+        insert.setParameter(2, action.getIdObjetivo());
+        insert.setParameter(3, action.getMotivo());
+        insert.setParameter(4, action.getRealizadoPor());
+        insert.setParameter(5, action.getTipoAccion());
+        insert.setParameter(6, action.getTipoObjetivo());
+        insert.executeUpdate();
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+    }
+
+    @Override
+    @Transactional
+    //@PreAuthorize("hasRole('ADMIN')")
+    public void eliminarPublicacion(UUID reportId, UUID adminId, String motivo) {
+    var report = reportRepository.findByIdWithPet(reportId)
+        .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
+    report.setEliminado(true);
+    report.setEstado("ELIMINADO");
+    report.setFechaResuelta(Instant.now());
+    report.setMensajeResolucion(motivo != null ? "Eliminado por admin: " + motivo : "Eliminado por admin");
+    reportRepository.save(report);
+
+    ModerationAction action = ModerationAction.builder()
+        .tipoAccion("ELIMINAR_PUBLICACION")
+        .tipoObjetivo("REPORTE")
+        .idObjetivo(reportId)
+        .realizadoPor(adminId)
+        .motivo(motivo != null ? motivo : "")
+        .creadoEn(Instant.now())
+        .build();
+    try {
+        var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
+        insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
+        insert.setParameter(2, action.getIdObjetivo());
+        insert.setParameter(3, action.getMotivo());
+        insert.setParameter(4, action.getRealizadoPor());
+        insert.setParameter(5, action.getTipoAccion());
+        insert.setParameter(6, action.getTipoObjetivo());
+        insert.executeUpdate();
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+    }
+
+    @Override
+    @Transactional
+    //@PreAuthorize("hasRole('ADMIN')")
+    public void ignorarReporte(UUID reportId, UUID adminId, String motivo) {
+    var report = reportRepository.findByIdWithPet(reportId)
+        .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
+        // Al ignorar un reporte por parte del admin, la publicación vuelve a estar activa
+        report.setEstado("ACTIVO");
+        report.setFechaResuelta(null);
+        report.setMensajeResolucion(motivo != null ? "Ignorado por admin: " + motivo : "Ignorado por admin");
+    reportRepository.save(report);
+
+    ModerationAction action = ModerationAction.builder()
+        .tipoAccion("IGNORAR_REPORTE")
+        .tipoObjetivo("REPORTE")
+        .idObjetivo(reportId)
+        .realizadoPor(adminId)
+        .motivo(motivo != null ? motivo : "")
+        .creadoEn(Instant.now())
+        .build();
+    try {
+        var insert = em.createNativeQuery("insert into moderation_action (creado_en,id_objetivo,motivo,realizado_por,tipo_accion,tipo_objetivo) values (?,?,?,?,?,?)");
+        insert.setParameter(1, java.sql.Timestamp.from(action.getCreadoEn()));
+        insert.setParameter(2, action.getIdObjetivo());
+        insert.setParameter(3, action.getMotivo());
+        insert.setParameter(4, action.getRealizadoPor());
+        insert.setParameter(5, action.getTipoAccion());
+        insert.setParameter(6, action.getTipoObjetivo());
+        insert.executeUpdate();
+    } catch (Exception e) {
+        throw new RuntimeException(e);
+    }
+    }
+
+    @Override
+    @Transactional
+    public void restaurarPublicacion(UUID reportId, UUID adminId, String motivo) {
         var report = reportRepository.findByIdWithPet(reportId)
             .orElseThrow(() -> new RuntimeException("Reporte no encontrado"));
         // Only restore if it was hidden and not deleted
@@ -550,20 +643,20 @@ public class AdminServiceImpl implements AdminService {
         }
     }
 
-        @Override
-        @Transactional(readOnly = true)
-        //@PreAuthorize("hasRole('ADMIN')")
-        public List<ModerationActionDto> listModerationHistory(int page, int size) {
-        var p = org.springframework.data.domain.PageRequest.of(page, size, org.springframework.data.domain.Sort.by("creadoEn").descending());
-        var actions = moderationActionRepository.findAll(p);
-        return actions.stream().map(a -> new ModerationActionDto(
-            a.getId(),
-            a.getTipoAccion(),
-            a.getTipoObjetivo(),
-            a.getIdObjetivo(),
-            a.getRealizadoPor(),
-            a.getMotivo(),
-            a.getCreadoEn()
-        )).toList();
-        }
+    @Override
+    @Transactional(readOnly = true)
+    //@PreAuthorize("hasRole('ADMIN')")
+    public List<ModerationActionDto> listModerationHistory(int page, int size) {
+    var p = PageRequest.of(page, size, Sort.by("creadoEn").descending());
+    var actions = moderationActionRepository.findAll(p);
+    return actions.stream().map(a -> new ModerationActionDto(
+        a.getId(),
+        a.getTipoAccion(),
+        a.getTipoObjetivo(),
+        a.getIdObjetivo(),
+        a.getRealizadoPor(),
+        a.getMotivo(),
+        a.getCreadoEn()
+    )).toList();
+    }
 }
