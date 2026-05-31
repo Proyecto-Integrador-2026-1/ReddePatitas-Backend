@@ -5,8 +5,16 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.redpatitas.redPatitas.dto.response.ApiErrorResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+
+import java.io.IOException;
 import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -14,11 +22,7 @@ import java.util.Map;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException ex) {
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body(errorBody(HttpStatus.BAD_REQUEST.value(), ex.getMessage(), "VALIDATION_ERROR"));
-    }
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(ConstraintViolationException.class)
     public ResponseEntity<Map<String, Object>> handleConstraintViolation(ConstraintViolationException ex) {
@@ -45,5 +49,31 @@ public class GlobalExceptionHandler {
         body.put("error", error);
         body.put("message", message);
         return body;
+    }
+
+    @ExceptionHandler(IOException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ApiErrorResponse> handleIOException(IOException ex) {
+        log.error("Error de IO: {}", ex.getMessage());
+        ApiErrorResponse error = new ApiErrorResponse(
+            "FILE_ERROR",
+            ex.getMessage(),
+            null,
+            MDC.get("traceId")
+        );
+        return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ResponseEntity<ApiErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+        log.error("Error de validación: {}", ex.getMessage());
+        ApiErrorResponse error = new ApiErrorResponse(
+            "VALIDATION_ERROR",
+            ex.getMessage(),
+            null,
+            MDC.get("traceId")
+        );
+        return ResponseEntity.badRequest().body(error);
     }
 }

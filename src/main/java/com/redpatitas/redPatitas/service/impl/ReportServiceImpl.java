@@ -22,6 +22,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
 import java.util.List;
@@ -214,4 +215,13 @@ public class ReportServiceImpl implements ReportService {
 
         return CompletableFuture.completedFuture(reports);
         }
+
+    @Override
+    @Transactional
+    public int deleteReportsOlderThan14Days() {
+        log.info("Ejecutando limpieza de reportes antiguos (más de 14 días)");
+        int deleted = reportRepository.deleteOldReports();
+        log.info("Limpieza completada. {} reportes eliminados.", deleted);
+        return deleted;
+    }
 }

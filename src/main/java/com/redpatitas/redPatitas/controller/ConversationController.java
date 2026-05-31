@@ -4,6 +4,7 @@ import com.redpatitas.redPatitas.dto.request.SendMessageRequestDto;
 import com.redpatitas.redPatitas.dto.response.ConversationResponseDto;
 import com.redpatitas.redPatitas.dto.response.MessageResponseDto;
 import com.redpatitas.redPatitas.service.interfaces.ConversationService;
+import com.redpatitas.redPatitas.dto.response.ConversationsResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -12,6 +13,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
+
 
 import java.util.List;
 import java.util.UUID;
@@ -36,11 +38,22 @@ public class ConversationController {
     
     @GetMapping("/conversations")
     @Operation(summary = "Listar conversaciones del usuario")
-    public ResponseEntity<List<ConversationResponseDto>> listConversations(
+    public ResponseEntity<ConversationsResponse> listConversations(
             @RequestHeader("X-User-Id") String userIdHeader) {
         UUID userId = parseUserId(userIdHeader);
         List<ConversationResponseDto> conversations = conversationService.getUserConversations(userId);
-        return ResponseEntity.ok(conversations);
+        
+        // Calcular total de no leídos sumando el unreadCount de cada conversación
+        long totalUnread = conversations.stream()
+                .mapToLong(ConversationResponseDto::getUnreadCount)
+                .sum();
+        
+        ConversationsResponse response = ConversationsResponse.builder()
+                .conversations(conversations)
+                .totalUnread(totalUnread)
+                .build();
+        
+        return ResponseEntity.ok(response);
     }
     
     @GetMapping("/conversations/{userConversationId}/messages")
