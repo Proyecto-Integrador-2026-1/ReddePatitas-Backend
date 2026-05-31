@@ -1,4 +1,4 @@
-/* package com.redpatitas.redPatitas.security;
+package com.redpatitas.redPatitas.security;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,7 +23,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import org.slf4j.MDC;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.redpatitas.redPatitas.config.SecurityProperties;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -42,13 +41,13 @@ import com.redpatitas.redPatitas.dto.response.ApiErrorResponse;
 @RequiredArgsConstructor
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
+	
 	private static final AntPathMatcher MATCHER = new AntPathMatcher();
 
 	private final JwtProperties jwtProperties;
 	private final ObjectMapper objectMapper;
-	private final SecurityProperties securityProperties;
 
-	/** No validar JWT en login ni documentación (evita 401 si se envía un Bearer erróneo en /login). 
+	/** No validar JWT en login ni documentación (evita 401 si se envía un Bearer erróneo en /login). */
 	@Override
 	protected boolean shouldNotFilter(HttpServletRequest request) {
 		String path = request.getServletPath();
@@ -65,33 +64,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			HttpServletRequest request,
 			HttpServletResponse response,
 			FilterChain filterChain) throws ServletException, IOException {
-		// Para pruebas locales: usar únicamente X-User-Id y X-User-Roles como autenticación.
-		// La validación de JWT está comentada temporalmente.
-		if (securityProperties != null && securityProperties.isAllowHeaderAuth()) {
-			String userId = request.getHeader("X-User-Id");
-			String rolesHeader = request.getHeader("X-User-Roles");
-			if (userId != null && !userId.isBlank()) {
-				List<GrantedAuthority> authorities = new ArrayList<>();
-				if (rolesHeader != null && !rolesHeader.isBlank()) {
-					for (String r : rolesHeader.split(",")) {
-						if (r != null && !r.isBlank()) {
-							String role = r.trim().startsWith("ROLE_") ? r.trim() : "ROLE_" + r.trim();
-							authorities.add(new SimpleGrantedAuthority(role));
-						}
-					}
-				} else {
-					// Para pruebas locales: si no se envía X-User-Roles, asumir ADMIN para poder probar desde Swagger.
-					authorities.add(new SimpleGrantedAuthority("ROLE_ADMIN"));
-				}
-				Authentication auth = new UsernamePasswordAuthenticationToken(new JwtPrincipal(userId, null), null, authorities);
-				SecurityContextHolder.getContext().setAuthentication(auth);
-			}
-			filterChain.doFilter(request, response);
-			return;
-		}
-
-		/*
-		// JWT validation temporarily disabled for local testing.
 		String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 		if (header == null || !header.startsWith("Bearer ")) {
 			filterChain.doFilter(request, response);
@@ -101,10 +73,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		try {
 			SecretKey key = Keys.hmacShaKeyFor(jwtProperties.getSecret().getBytes(StandardCharsets.UTF_8));
 			Claims claims = Jwts.parserBuilder()
-					.setSigningKey(key)
-					.build()
-					.parseClaimsJws(token)
-					.getBody();
+				.setSigningKey(key)
+				.build()
+				.parseClaimsJws(token)
+				.getBody();
+
+			// parsed claims available in 'claims'
 
 			String userId = claims.getSubject();
 			if (userId == null || userId.isBlank()) {
@@ -137,7 +111,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			objectMapper.writeValue(response.getOutputStream(), body);
 			return;
 		}
-		
 		filterChain.doFilter(request, response);
 	}
 
@@ -167,5 +140,3 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		return null;
 	}
 }
-
- */

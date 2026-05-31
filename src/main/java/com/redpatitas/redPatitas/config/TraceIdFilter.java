@@ -1,4 +1,4 @@
-/* package com.redpatitas.redPatitas.config;
+package com.redpatitas.redPatitas.config;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -40,4 +40,3 @@ public class TraceIdFilter extends OncePerRequestFilter {
 		}
 	}
 }
- */

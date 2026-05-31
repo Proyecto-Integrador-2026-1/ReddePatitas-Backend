@@ -1,4 +1,4 @@
-/* package com.redpatitas.redPatitas.security;
+package com.redpatitas.redPatitas.security;
 
 import java.io.IOException;
 
@@ -16,8 +16,8 @@ import lombok.RequiredArgsConstructor;
 
 import com.redpatitas.redPatitas.config.TraceIdFilter;
 import com.redpatitas.redPatitas.dto.response.ApiErrorResponse;
-/**
- * Respuesta 401 JSON alineada con {@link ApiErrorResponse} (sin cuerpo vacío).
+
+ //Respuesta 401 JSON alineada con {@link ApiErrorResponse} (sin cuerpo vacío).
  
 @Component
 @RequiredArgsConstructor
@@ -51,4 +51,4 @@ public class JsonAuthenticationEntryPoint implements AuthenticationEntryPoint {
 		return null;
 	}
 }
- */
+
