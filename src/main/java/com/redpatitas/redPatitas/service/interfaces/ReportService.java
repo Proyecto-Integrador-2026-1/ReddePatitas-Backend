@@ -15,4 +15,5 @@ public interface ReportService {
     CompletableFuture<List<ReportPrincipalResponseDto>> findAllForPrincipal();
     CompletableFuture<List<ReportPrincipalResponseDto>> findAllResolvedForPrincipal();
     CompletableFuture<ReportResponseDto> resolveReport(java.util.UUID reportId, String userIdHeader, com.redpatitas.redPatitas.dto.request.ResolveReportRequestDto dto);
+    int deleteReportsOlderThan14Days();
 }

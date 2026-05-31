@@ -2,9 +2,11 @@ package com.redpatitas.redPatitas.repository;
 
 import com.redpatitas.redPatitas.entity.Report;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import java.util.UUID;
 import java.util.List;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface ReportRepository extends JpaRepository<Report, UUID> {
     @Query("select r from Report r left join fetch r.pet order by r.fechaCreacion desc")
@@ -26,4 +28,9 @@ public interface ReportRepository extends JpaRepository<Report, UUID> {
     long countByEstadoNot(String estado);
     
     long countByOcultoTrue();
+
+    @Modifying
+    @Transactional
+    @Query(value = "DELETE FROM reports WHERE fecha_creacion < NOW() - INTERVAL '14 days' AND eliminado = false", nativeQuery = true)
+    int deleteOldReports();
 }
