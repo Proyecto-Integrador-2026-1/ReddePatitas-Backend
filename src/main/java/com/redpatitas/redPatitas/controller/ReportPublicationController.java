@@ -11,7 +11,9 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.security.core.context.SecurityContextHolder;
+
+import com.redpatitas.redPatitas.security.JwtPrincipal;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
@@ -29,18 +31,23 @@ public class ReportPublicationController {
 
     @Operation(summary = "Reportar una publicación inapropiada", description = "Permite a los usuarios reportar una publicación específica proporcionando un motivo y una descripción opcional. Si el usuario ya ha reportado la misma publicación, se devuelve un error de conflicto.")
     @PostMapping
-    public ResponseEntity<Map<String, String>> submitReport(
-            @Valid @RequestBody ReportPublicationRequestDto dto,
-            @RequestHeader(value = "X-User-Id") String userIdHeader
-    ) {
-        UUID reporterId;
-        try {
-            reporterId = UUID.fromString(userIdHeader);
-        } catch (IllegalArgumentException ex) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Cabecera X-User-Id inválida");
-        }
+    public ResponseEntity<Map<String, String>> submitReport(@Valid @RequestBody ReportPublicationRequestDto dto) {
+        UUID reporterId = getReporterIdFromToken();
 
         String msg = reportPublicationService.submitReport(dto, reporterId);
         return ResponseEntity.ok(Map.of("message", msg));
+    }
+
+    private UUID getReporterIdFromToken() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        try {
+            var principal = (JwtPrincipal) auth.getPrincipal();
+            return UUID.fromString(principal.userId());
+        } catch (ClassCastException | IllegalArgumentException ex) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
     }
 }
