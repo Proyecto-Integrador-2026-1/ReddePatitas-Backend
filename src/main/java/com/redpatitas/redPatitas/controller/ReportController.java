@@ -22,13 +22,14 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.UUID;
+import com.redpatitas.redPatitas.security.JwtPrincipal;
 
 @RestController
 @RequestMapping("/api/reports")
@@ -79,10 +80,23 @@ public class ReportController {
         public CompletableFuture<ResponseEntity<ReportResponseDto>> resolveReport(
             @Parameter(description = "UUID del reporte", required = true)
             @PathVariable("id") UUID id,
-            @RequestHeader("X-User-Id") String userIdHeader,
             @RequestBody ResolveReportRequestDto dto
     ) {
-        return reportService.resolveReport(id, userIdHeader, dto).thenApply(ResponseEntity::ok);
+        String userId = getRequesterIdFromToken();
+        return reportService.resolveReport(id, userId, dto).thenApply(ResponseEntity::ok);
+    }
+
+    private String getRequesterIdFromToken() {
+        var auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal() == null) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
+        try {
+            var principal = (JwtPrincipal) auth.getPrincipal();
+            return principal.userId();
+        } catch (ClassCastException ex) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+        }
     }
 
 }
